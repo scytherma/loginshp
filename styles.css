@@ -807,13 +807,13 @@ body.dark-theme .margin-section {
 }
 
 .dropdown-item.logout-btn {
-    color: white;
+    color: #333;
     font-weight: 600;
     border-top: 1px solid #eee;
 }
 
 .dropdown-item.logout-btn:hover {
-    background-color: #ffece6;
+    background-color: rgb(255, 107, 53);
 }
 
 /* Estilos para o Toggle de Tema */
