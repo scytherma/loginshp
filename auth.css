@@ -83,7 +83,7 @@ body {
 }
 
 .security-text strong {
-    color: #1976d2;
+    color: rgb(255, 107, 53);
     font-size: 14px;
     display: block;
     margin-bottom: 4px;
@@ -97,7 +97,7 @@ body {
 }
 
 .forgot-link {
-    color: #2196f3;
+    color: rgb(255, 107, 53);
     text-decoration: none;
     font-weight: 500;
 }
@@ -183,7 +183,7 @@ body {
 .auth-button {
     width: 100%;
     padding: 16px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, rgb(28 28 28) 0%, rgb(255, 107, 53) 100%);
     color: white;
     border: none;
     border-radius: 8px;
