@@ -645,17 +645,25 @@ function initializeUserMenu() {
     }
 
     if (themeToggle) {
-        themeToggle.addEventListener("change", () => {
-            document.body.classList.toggle("dark-theme");
-            const isDarkMode = document.body.classList.contains("dark-theme");
-            localStorage.setItem("dark-theme", isDarkMode);
-        });
-
-        // Aplicar o tema salvo ao carregar a página
-        if (localStorage.getItem("dark-theme") === "true") {
+        // Apply saved theme on page load
+        const savedTheme = localStorage.getItem("theme");
+        if (savedTheme === "dark-theme") {
             document.body.classList.add("dark-theme");
             themeToggle.checked = true;
+        } else {
+            document.body.classList.remove("dark-theme");
+            themeToggle.checked = false;
         }
+
+        themeToggle.addEventListener("change", function() {
+            if (this.checked) {
+                document.body.classList.add("dark-theme");
+                localStorage.setItem("theme", "dark-theme");
+            } else {
+                document.body.classList.remove("dark-theme");
+                localStorage.setItem("theme", "light-theme"); // Or remove item if light is default
+            }
+        });
     }
 
     // Fechar o menu se clicar fora
