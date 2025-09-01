@@ -47,7 +47,7 @@
 .search-form {
     display: flex;
     gap: 15px;
-    align-items: flex-start;
+    align-items: center;
     max-width: 800px;
     margin: 0 auto;
 }
