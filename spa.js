@@ -175,6 +175,12 @@ function getHomeContent() {
                         <span class="status coming-soon">Em breve</span>
                     </div>
                     <div class="feature-card">
+                        <i class="fas fa-chart-line"></i>
+                        <h3>Tendências de Mercado</h3>
+                        <p>Análise de tendências para o seu nicho</p>
+                        <span class="status coming-soon">Em breve</span>
+                    </div>
+                    <div class="feature-card">
                         <i class="fas fa-plug"></i>
                         <h3>Conexões</h3>
                         <p>Integração com APIs das principais plataformas de e-commerce</p>
