@@ -2099,13 +2099,15 @@ body.dark-theme .save-field input[type="text"]:focus {
     border-color: #ff6b35;
 }
 
-/* Lista de Cálculos Salvos */
+/* Lista de Cálculos Salvos - Largura Total */
 .saved-calculations-section {
     background: white;
     border-radius: 12px;
     margin-top: 20px;
-    border: 1px solid #e0e0e0;
+    border: 2px solid #ff6b35;
     overflow: hidden;
+    grid-column: 1 / -1; /* Ocupa toda a largura do grid */
+    width: 100%;
 }
 
 .saved-calculations-header {
@@ -2126,6 +2128,7 @@ body.dark-theme .save-field input[type="text"]:focus {
 .saved-calculations-list {
     max-height: 400px;
     overflow-y: auto;
+    padding: 20px;
 }
 
 .calculation-item {
@@ -2136,14 +2139,18 @@ body.dark-theme .save-field input[type="text"]:focus {
     display: flex;
     align-items: center;
     gap: 12px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    background: #f8f9fa;
 }
 
 .calculation-item:hover {
-    background: #f8f9fa;
+    background: #e9ecef;
 }
 
 .calculation-item:last-child {
     border-bottom: none;
+    margin-bottom: 0;
 }
 
 .calculation-photo {
@@ -2227,18 +2234,40 @@ body.dark-theme .save-field input[type="text"]:focus {
     margin-bottom: 16px;
 }
 
+/* Campo de busca para anúncios salvos */
+.saved-calculations-search {
+    padding: 15px 20px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.saved-calculations-search input {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    background: #f8f9fa;
+}
+
+.saved-calculations-search input:focus {
+    outline: none;
+    border-color: #ff6b35;
+    background: white;
+}
+
 /* Tema escuro para lista de cálculos */
 body.dark-theme .saved-calculations-section {
     background: #3a3a3a;
-    border-color: #444;
+    border-color: #ff6b35;
 }
 
 body.dark-theme .calculation-item {
     border-bottom-color: #444;
+    background: #2c2c2c;
 }
 
 body.dark-theme .calculation-item:hover {
-    background: #2c2c2c;
+    background: #444;
 }
 
 body.dark-theme .calculation-photo {
@@ -2269,6 +2298,21 @@ body.dark-theme .no-calculations {
 
 body.dark-theme .no-calculations i {
     color: #555;
+}
+
+body.dark-theme .saved-calculations-search {
+    border-bottom-color: #444;
+}
+
+body.dark-theme .saved-calculations-search input {
+    background: #2c2c2c;
+    border-color: #555;
+    color: #eee;
+}
+
+body.dark-theme .saved-calculations-search input:focus {
+    border-color: #ff6b35;
+    background: #3a3a3a;
 }
 
 
@@ -2441,4 +2485,13 @@ body.dark-theme .no-calculations i {
     padding: 20px;
     color: #999;
 }
+
+
+
+.save-title-container {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Adiciona um espaçamento de 10px entre os itens */
+}
+
 
