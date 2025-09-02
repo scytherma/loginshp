@@ -80,7 +80,7 @@ body {
 
 .calculator-wrapper {
     display: grid;
-    grid-template-columns: 1fr; /* Alterado para uma coluna */
+    grid-template-columns: 1fr 1fr;
     gap: 20px;
     background: white;
     border-radius: 0 0 12px 12px;
@@ -316,7 +316,6 @@ input:checked + .slider:before {
     display: flex; /* Alterado para flexbox */
     flex-direction: column; /* Organiza os itens em coluna */
     gap: 20px; /* Espaçamento entre os elementos filhos */
-    grid-column: 1 / -1; /* Ocupa toda a largura do grid */
 }
 
 .main-results {
@@ -2122,7 +2121,8 @@ body.dark-theme .save-field input[type="text"]:focus {
     margin-top: 20px;
     border: 2px solid #ff6b35;
     overflow: hidden;
-    width: 100%; /* Garante que ocupe 100% da largura do pai */
+    grid-column: 1 / -1; /* Ocupa toda a largura do grid do pai */
+    width: 100%;
 }
 
 .saved-calculations-header {
