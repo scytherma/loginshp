@@ -1934,6 +1934,7 @@ body.dark-theme .alert-info {
     display: flex;
     align-items: stretch;
     height: 50px;
+    gap: 15px; /* Adiciona espaçamento entre os itens flex */
 }
 
 .save-title-input {
