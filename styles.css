@@ -2121,8 +2121,8 @@ body.dark-theme .save-field input[type="text"]:focus {
     margin-top: 20px;
     border: 2px solid #ff6b35;
     overflow: hidden;
-    grid-column: 1 / -1; /* Ocupa toda a largura do grid do pai */
-    width: 100%;
+    width: 100%; /* Garante que ocupe 100% da largura do pai flex */
+    flex-basis: 100%; /* Garante que ocupe 100% da largura em um contêiner flex */
 }
 
 .saved-calculations-header {
