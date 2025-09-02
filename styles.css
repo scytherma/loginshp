@@ -2102,7 +2102,7 @@ body.dark-theme .save-field label {
     color: #eee;
 }
 
-body.dark-theme .save-field texta/* Seção de Resultados */
+body.dark-theme .save-field text/* Seção de Resultados */
 .results-section {
     padding: 30px;
     background: white;
@@ -2120,10 +2120,7 @@ body.dark-theme .save-field texta/* Seção de Resultados */
     overflow: hidden;
     grid-column: 1 / -1; /* Ocupa toda a largura do grid do pai */
     width: 100%;
-}
-.saved-calculations-header {
-    background: #ff6b35;
-    color: white;
+}hite;
     padding: 16px 20px;
     font-size: 16px;
     font-weight: 600;
