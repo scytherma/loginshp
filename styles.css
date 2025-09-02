@@ -301,6 +301,9 @@ input:checked + .slider:before {
 .results-section {
     padding: 30px;
     background: white;
+    display: grid; /* Adicionado para permitir grid-column em elementos filhos */
+    grid-template-columns: 1fr; /* Garante que os filhos se organizem em uma coluna */
+    gap: 20px; /* Espaçamento entre os elementos filhos */
 }
 
 .main-results {
