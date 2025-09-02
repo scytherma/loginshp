@@ -80,12 +80,24 @@ body {
 
 .calculator-wrapper {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr; /* Alterado para uma coluna */
     gap: 20px;
     background: white;
     border-radius: 0 0 12px 12px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     overflow: hidden;
+}
+
+@media (max-width: 768px) {
+    .calculator-wrapper {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .calculator-wrapper {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* Seção de Entrada */
@@ -301,9 +313,10 @@ input:checked + .slider:before {
 .results-section {
     padding: 30px;
     background: white;
-    display: grid; /* Adicionado para permitir grid-column em elementos filhos */
-    grid-template-columns: 1fr; /* Garante que os filhos se organizem em uma coluna */
+    display: flex; /* Alterado para flexbox */
+    flex-direction: column; /* Organiza os itens em coluna */
     gap: 20px; /* Espaçamento entre os elementos filhos */
+    grid-column: 1 / -1; /* Ocupa toda a largura do grid */
 }
 
 .main-results {
@@ -2109,8 +2122,7 @@ body.dark-theme .save-field input[type="text"]:focus {
     margin-top: 20px;
     border: 2px solid #ff6b35;
     overflow: hidden;
-    grid-column: 1 / -1; /* Ocupa toda a largura do grid */
-    width: 100%;
+    width: 100%; /* Garante que ocupe 100% da largura do pai */
 }
 
 .saved-calculations-header {
