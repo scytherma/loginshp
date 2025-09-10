@@ -1,7 +1,6 @@
 // spa.js - Sistema de Single Page Application
 
 document.addEventListener('DOMContentLoaded', () => {
-    const contentContainer = document.getElementById('content-container');
     const contentContainer = document.getElementById('content');
     const navLinks = document.querySelectorAll('.nav__item');
 
@@ -60,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
             initCalculatorEvents();
             applyAccessControls();
         }
-
+        
         // Se for a página DRE, inicializar a calculadora DRE
         if (route === 'dre') {
             setupDREPage();
@@ -84,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
             event.preventDefault();
             const currentRoute = getCurrentRoute();
             const newRoute = link.getAttribute('data-route');
-
+            
             // Se estiver saindo da calculadora ou DRE, resetar os cálculos
             if (currentRoute === 'calculadora' && newRoute !== 'calculadora') {
                 resetAllCalculators();
@@ -92,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (currentRoute === 'dre' && newRoute !== 'dre') {
                 resetDRECalculator();
             }
-
+            
             loadPage(newRoute);
             updateActiveClass(newRoute);
         });
@@ -115,7 +114,7 @@ function resetAllCalculators() {
     if (typeof resetarCalculadoraShopee === 'function') {
         resetarCalculadoraShopee();
     }
-
+    
     // Resetar calculadora Mercado Livre
     if (typeof resetarCalculadoraMercadoLivre === 'function') {
         resetarCalculadoraMercadoLivre();
@@ -785,60 +784,6 @@ function getPesquisaContent() {
                 </div>
             </div>
 
-            <!-- Seção de Recursos -->
-            <div class="features-section">
-                <h2>O que nossa análise inclui:</h2>
-                <div class="features-grid">
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                        <h3>Análise de Preços</h3>
-                        <p>Preços médios, mínimos e máximos da concorrência, com sugestão de precificação otimizada para seu produto.</p>
-                    </div>
-                    
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-search"></i>
-                        </div>
-                        <h3>Tendências de Mercado</h3>
-                        <p>Dados do Google Trends e análise de sazonalidade para identificar os melhores momentos para vender.</p>
-                    </div>
-                    
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-bullseye"></i>
-                        </div>
-                        <h3>Índice de Demanda</h3>
-                        <p>Medição da demanda atual do produto baseada em múltiplas fontes de dados e comportamento do consumidor.</p>
-                    </div>
-                    
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-lightbulb"></i>
-                        </div>
-                        <h3>Insights Inteligentes</h3>
-                        <p>Recomendações personalizadas geradas por IA para otimizar sua estratégia de vendas e marketing.</p>
-                    </div>
-                    
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-map-marker-alt"></i>
-                        </div>
-                        <h3>Análise Geográfica</h3>
-                        <p>Dados demográficos e climáticos que podem influenciar a demanda do seu produto por região.</p>
-                    </div>
-                    
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-clock"></i>
-                        </div>
-                        <h3>Dados em Tempo Real</h3>
-                        <p>Informações atualizadas dos principais marketplaces e fontes de dados do mercado brasileiro.</p>
-                    </div>
-                </div>
-            </div>
-
             <!-- Seção de Histórico (será mostrada dinamicamente) -->
             <div class="history-section" id="searchHistorySection">
                 <h2>
@@ -974,7 +919,7 @@ function initCalculatorEvents() {
 
     initializeShopeeCalculator();
     initializeMercadoLivreCalculator();
-
+    
     // Carregar cálculos salvos ao inicializar
     loadSavedCalculations('shopee');
     loadSavedCalculations('mercadolivre');
@@ -2004,7 +1949,7 @@ async function uploadImage(file, userId) {
     try {
         const fileExt = file.name.split('.').pop();
         const fileName = `${userId}/${Date.now()}.${fileExt}`;
-
+        
         const { data, error } = await supabaseClient.storage
             .from('ad-photos')
             .upload(fileName, file);
@@ -2151,13 +2096,13 @@ async function saveCalculation(platform) {
         }
 
         showSuccess("Cálculo salvo com sucesso!");
-
+        
         // Limpar campos de salvamento
         clearSaveFields(platform);
-
+        
         // Recarregar lista de cálculos salvos
         loadSavedCalculations(platform);
-
+        
         console.log("Cálculo salvo:", data);
     } catch (error) {
         console.error("Erro ao salvar cálculo:", error);
@@ -2233,7 +2178,7 @@ function displaySavedCalculations(calculations, platform) {
         const createdDate = new Date(calc.created_at).toLocaleDateString('pt-BR');
         const precoVenda = calc.calculation_data?.results?.precoVenda || 'N/A';
         const lucro = calc.calculation_data?.results?.lucroPorVenda || 'N/A';
-
+        
         return `
             <div class="calculation-item" data-id="${calc.id}">
                 <div class="calculation-photo">
@@ -2278,7 +2223,7 @@ async function loadCalculation(calculationId, platform) {
 
         // Preencher campos da calculadora com os dados salvos
         fillCalculatorFields(data, platform);
-
+        
         showSuccess("Cálculo carregado com sucesso!");
     } catch (error) {
         console.error('Erro ao carregar cálculo:', error);
@@ -2289,7 +2234,7 @@ async function loadCalculation(calculationId, platform) {
 // Função para preencher campos da calculadora
 function fillCalculatorFields(calculation, platform) {
     const inputs = calculation.calculation_data.inputs;
-
+    
     if (platform === 'shopee') {
         // Preencher campos Shopee
         if (inputs.custoProduto) document.getElementById("custoProduto").value = inputs.custoProduto.toString().replace('.', ',');
@@ -2297,16 +2242,16 @@ function fillCalculatorFields(calculation, platform) {
         if (inputs.despesasVariaveis) document.getElementById("despesasVariaveis").value = inputs.despesasVariaveis.toString().replace('.', ',');
         if (inputs.freteGratis !== undefined) document.getElementById("freteGratis").checked = inputs.freteGratis;
         if (inputs.margemLucro) document.getElementById("margemLucro").value = inputs.margemLucro;
-
+        
         // Preencher campos de salvamento
         document.getElementById("nomeAnuncioShopee").value = calculation.ad_name || '';
         document.getElementById("fotoAnuncioShopee").value = calculation.ad_photo_url || '';
         document.getElementById("comentarioShopee").value = calculation.comment || '';
         document.getElementById("tagsShopee").value = calculation.tags ? calculation.tags.join(', ') : '';
-
+        
         // Recalcular
         calcularPrecoVendaShopee();
-
+        
     } else if (platform === 'mercadolivre') {
         // Preencher campos Mercado Livre
         if (inputs.custoProduto) document.getElementById("custoProdutoML").value = inputs.custoProduto.toString().replace('.', ',');
@@ -2315,13 +2260,13 @@ function fillCalculatorFields(calculation, platform) {
         if (inputs.taxaMercadoLivreSelect) document.getElementById("taxaMercadoLivreSelect").value = inputs.taxaMercadoLivreSelect;
         if (inputs.taxaFreteSelect) document.getElementById("taxaFreteSelect").value = inputs.taxaFreteSelect;
         if (inputs.margemLucro) document.getElementById("margemLucroML").value = inputs.margemLucro;
-
+        
         // Preencher campos de salvamento
         document.getElementById("nomeAnuncioML").value = calculation.ad_name || '';
         document.getElementById("fotoAnuncioML").value = calculation.ad_photo_url || '';
         document.getElementById("comentarioML").value = calculation.comment || '';
         document.getElementById("tagsML").value = calculation.tags ? calculation.tags.join(', ') : '';
-
+        
         // Recalcular
         calcularPrecoVendaML();
     }
@@ -2361,7 +2306,7 @@ function showSuccess(message) {
             <span>${message}</span>
         </div>
     `;
-
+    
     // Adicionar estilos se não existirem
     if (!document.getElementById('message-styles')) {
         const styles = document.createElement('style');
@@ -2407,9 +2352,9 @@ function showSuccess(message) {
         `;
         document.head.appendChild(styles);
     }
-
+    
     document.body.appendChild(successDiv);
-
+    
     // Auto-remover após 3 segundos
     setTimeout(() => {
         successDiv.remove();
@@ -2426,12 +2371,11 @@ function showError(message) {
             <span>${message}</span>
         </div>
     `;
-
+    
     document.body.appendChild(errorDiv);
-
+    
     // Auto-remover após 5 segundos
     setTimeout(() => {
         errorDiv.remove();
     }, 5000);
 }
-~
