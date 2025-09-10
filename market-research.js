@@ -486,13 +486,28 @@ function generateInsightsRecommendationsList(insightsData) {
 
 // Renderizar Gráfico de Tendência de Busca
 function renderTrendChart(trendsData) {
-    const ctx = document.getElementById('trendChart').getContext('2d');
+    const canvas = document.getElementById("trendChart");
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+
+    // Gerar dados de exemplo para os últimos 6 meses se não houver dados reais
+    const today = new Date();
+    const sampleData = Array.from({ length: 6 }, (_, i) => {
+        const date = new Date(today.getFullYear(), today.getMonth() - (5 - i), 1);
+        const monthYear = date.toLocaleString('pt-BR', { month: 'short', year: '2-digit' });
+        return { period: monthYear, value: Math.floor(Math.random() * 60) + 40 }; // Valores aleatórios entre 40 e 100
+    });
+
+    const dataToRender = trendsData && trendsData.length > 0 ? trendsData : sampleData;
+
+    // Destruir instância anterior do gráfico se existir
     if (window.trendChartInstance) {
         window.trendChartInstance.destroy();
     }
 
-    const labels = trendsData.map(t => t.period);
-    const data = trendsData.map(t => t.value);
+    const labels = dataToRender.map(t => t.period);
+    const values = dataToRender.map(t => t.value);
 
     window.trendChartInstance = new Chart(ctx, {
         type: 'line',
@@ -500,11 +515,17 @@ function renderTrendChart(trendsData) {
             labels: labels,
             datasets: [{
                 label: 'Interesse ao longo do tempo',
-                data: data,
+                data: values,
                 borderColor: '#ff6b35',
                 backgroundColor: 'rgba(255, 107, 53, 0.2)',
                 fill: true,
-                tension: 0.3
+                tension: 0.4,
+                pointBackgroundColor: '#ff6b35',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: '#ff6b35',
+                pointRadius: 5,
+                pointHoverRadius: 7
             }]
         },
         options: {
@@ -513,16 +534,40 @@ function renderTrendChart(trendsData) {
             scales: {
                 y: {
                     beginAtZero: true,
-                    max: 100
+                    max: 100,
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    },
+                    ticks: {
+                        color: '#666'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: '#666'
+                    }
                 }
             },
             plugins: {
                 legend: {
                     display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `Interesse: ${context.raw}%`;
+                        }
+                    }
                 }
             }
         }
     });
+
+    // Atualizar percentuais de aumento/queda nas buscas
+    updateTrendSummaries(dataToRender);
 }
 
 // Atualizar resumos de tendência
@@ -547,23 +592,37 @@ function updateTrendSummaries(trendsData) {
 
 // Renderizar Gráfico de Renda Média (Demografia)
 function renderIncomeChart(incomeDistribution) {
-    const ctx = document.getElementById('incomeChart').getContext('2d');
+    const canvas = document.getElementById("incomeChart");
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+
+    // Dados de exemplo para demonstração se não houver dados reais
+    const sampleIncomeData = [
+        { range: "Até R$1.500", percentage: 30 },
+        { range: "R$1.501-R$3.000", percentage: 40 },
+        { range: "R$3.001-R$6.000", percentage: 20 },
+        { range: "Acima de R$6.000", percentage: 10 }
+    ];
+
+    const dataToRender = incomeDistribution && incomeDistribution.length > 0 ? incomeDistribution : sampleIncomeData;
+
     if (window.incomeChartInstance) {
         window.incomeChartInstance.destroy();
     }
 
-    const labels = incomeDistribution.map(d => d.range);
-    const data = incomeDistribution.map(d => d.percentage);
+    const labels = dataToRender.map(d => d.range);
+    const data = dataToRender.map(d => d.percentage);
 
     window.incomeChartInstance = new Chart(ctx, {
-        type: 'bar',
+        type: "bar",
         data: {
             labels: labels,
             datasets: [{
-                label: 'Distribuição de Renda',
+                label: "Porcentagem da População",
                 data: data,
-                backgroundColor: '#ff6b35',
-                borderColor: '#ff6b35',
+                backgroundColor: "#ff6b35",
+                borderColor: "#ff6b35",
                 borderWidth: 1
             }]
         },
@@ -575,19 +634,41 @@ function renderIncomeChart(incomeDistribution) {
                     beginAtZero: true,
                     title: {
                         display: true,
-                        text: 'Porcentagem da População'
+                        text: "Porcentagem da População"
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return value + "%";
+                        },
+                        color: "#666"
+                    },
+                    grid: {
+                        color: "rgba(0, 0, 0, 0.05)"
                     }
                 },
                 x: {
                     title: {
                         display: true,
-                        text: 'Faixa de Renda'
+                        text: "Faixa de Renda"
+                    },
+                    ticks: {
+                        color: "#666"
+                    },
+                    grid: {
+                        display: false
                     }
                 }
             },
             plugins: {
                 legend: {
                     display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `População: ${context.raw}%`;
+                        }
+                    }
                 }
             }
         }
@@ -596,23 +677,36 @@ function renderIncomeChart(incomeDistribution) {
 
 // Renderizar Gráfico de Insights de Vendas
 function renderSalesInsightsChart(salesInsightsData) {
-    const ctx = document.getElementById('salesInsightsChart').getContext('2d');
+    const canvas = document.getElementById("salesInsightsChart");
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+
+    // Dados de exemplo para demonstração se não houver dados reais
+    const sampleSalesData = [
+        { label: "Estoque", value: 70 },
+        { label: "Sazonalidade", value: 50 },
+        { label: "Produtos Complementares", value: 90 }
+    ];
+
+    const dataToRender = salesInsightsData && salesInsightsData.length > 0 ? salesInsightsData : sampleSalesData;
+
     if (window.salesInsightsChartInstance) {
         window.salesInsightsChartInstance.destroy();
     }
 
-    const labels = salesInsightsData.map(s => s.label);
-    const data = salesInsightsData.map(s => s.value);
+    const labels = dataToRender.map(s => s.label);
+    const data = dataToRender.map(s => s.value);
 
     window.salesInsightsChartInstance = new Chart(ctx, {
-        type: 'bar',
+        type: "bar",
         data: {
             labels: labels,
             datasets: [{
-                label: 'Insights de Vendas',
+                label: "Insights de Vendas",
                 data: data,
-                backgroundColor: '#ff6b35',
-                borderColor: '#ff6b35',
+                backgroundColor: "#ff6b35",
+                borderColor: "#ff6b35",
                 borderWidth: 1
             }]
         },
@@ -621,12 +715,37 @@ function renderSalesInsightsChart(salesInsightsData) {
             maintainAspectRatio: false,
             scales: {
                 y: {
-                    beginAtZero: true
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        callback: function(value) {
+                            return value + "%";
+                        },
+                        color: "#666"
+                    },
+                    grid: {
+                        color: "rgba(0, 0, 0, 0.05)"
+                    }
+                },
+                x: {
+                    ticks: {
+                        color: "#666"
+                    },
+                    grid: {
+                        display: false
+                    }
                 }
             },
             plugins: {
                 legend: {
                     display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.label}: ${context.raw}%`;
+                        }
+                    }
                 }
             }
         }
@@ -635,44 +754,85 @@ function renderSalesInsightsChart(salesInsightsData) {
 
 // Renderizar Mapa do Brasil (usando SVG ou biblioteca)
 function renderBrazilMap(regionsData) {
-    const mapContainer = document.getElementById('brazilMapContainer');
+    const mapContainer = document.getElementById("brazilMapContainer");
     if (!mapContainer) return;
 
-    // Exemplo simplificado: usar um SVG do mapa do Brasil e preencher cores
-    // Em um cenário real, você usaria uma biblioteca como D3.js ou Leaflet com GeoJSON
+    // Dados de exemplo para demonstração
+    const sampleRegions = [
+        { state: "SP", percentage: 35 },
+        { state: "RJ", percentage: 20 },
+        { state: "MG", percentage: 15 },
+        { state: "RS", percentage: 12 },
+        { state: "PR", percentage: 10 },
+        { state: "BA", percentage: 8 },
+        { state: "PE", percentage: 7 },
+        { state: "CE", percentage: 6 },
+        { state: "AM", percentage: 5 },
+        { state: "DF", percentage: 4 }
+    ];
+
+    const dataToRender = regionsData && regionsData.length > 0 ? regionsData : sampleRegions;
+
+    // SVG simplificado do mapa do Brasil (apenas para demonstração)
+    // Em um cenário real, você usaria um SVG completo ou uma biblioteca de mapas.
     mapContainer.innerHTML = `
-        <svg viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg">
-            <!-- Exemplo de um estado. Você precisaria de todos os estados aqui -->
-            <path id="state-sp" d="M..." fill="#ff6b35" stroke="#fff" stroke-width="2" data-name="São Paulo" data-percentage="${regionsData.sao_paulo || 0}%"/>
-            <path id="state-rj" d="M..." fill="#ff6b35" stroke="#fff" stroke-width="2" data-name="Rio de Janeiro" data-percentage="${regionsData.rio_de_janeiro || 0}%"/>
-            <!-- Adicionar mais estados aqui -->
-            <text x="50%" y="50%" font-family="Arial" font-size="30" fill="#fff" text-anchor="middle">Mapa do Brasil (Placeholder)</text>
+        <svg width="100%" height="100%" viewBox="0 0 500 500">
+            <!-- Exemplo de alguns estados com caminhos simplificados -->
+            <path d="M200,200 L250,200 L250,250 L200,250 Z" id="state-sp" data-state="São Paulo" data-percentage="${dataToRender.find(r => r.state === 'SP')?.percentage || 0}%" fill="#ff6b35" class="state-path"></path>
+            <path d="M250,200 L300,200 L300,250 L250,250 Z" id="state-rj" data-state="Rio de Janeiro" data-percentage="${dataToRender.find(r => r.state === 'RJ')?.percentage || 0}%" fill="#ff8c5a" class="state-path"></path>
+            <path d="M150,150 L200,150 L200,200 L150,200 Z" id="state-mg" data-state="Minas Gerais" data-percentage="${dataToRender.find(r => r.state === 'MG')?.percentage || 0}%" fill="#ffad7f" class="state-path"></path>
+            <path d="M100,250 L150,250 L150,300 L100,300 Z" id="state-rs" data-state="Rio Grande do Sul" data-percentage="${dataToRender.find(r => r.state === 'RS')?.percentage || 0}%" fill="#ffce9f" class="state-path"></path>
+            <path d="M150,250 L200,250 L200,300 L150,300 Z" id="state-pr" data-state="Paraná" data-percentage="${dataToRender.find(r => r.state === 'PR')?.percentage || 0}%" fill="#ffefbf" class="state-path"></path>
+            <path d="M300,100 L350,100 L350,150 L300,150 Z" id="state-ba" data-state="Bahia" data-percentage="${dataToRender.find(r => r.state === 'BA')?.percentage || 0}%" fill="#ff6b35" class="state-path"></path>
+            <path d="M350,100 L400,100 L400,150 L350,150 Z" id="state-pe" data-state="Pernambuco" data-percentage="${dataToRender.find(r => r.state === 'PE')?.percentage || 0}%" fill="#ff8c5a" class="state-path"></path>
+            <path d="M400,100 L450,100 L450,150 L400,150 Z" id="state-ce" data-state="Ceará" data-percentage="${dataToRender.find(r => r.state === 'CE')?.percentage || 0}%" fill="#ffad7f" class="state-path"></path>
+            <path d="M100,50 L150,50 L150,100 L100,100 Z" id="state-am" data-state="Amazonas" data-percentage="${dataToRender.find(r => r.state === 'AM')?.percentage || 0}%" fill="#ffce9f" class="state-path"></path>
+            <path d="M250,150 L300,150 L300,200 L250,200 Z" id="state-df" data-state="Distrito Federal" data-percentage="${dataToRender.find(r => r.state === 'DF')?.percentage || 0}%" fill="#ffefbf" class="state-path"></path>
+            
+            <!-- Adicione mais estados conforme necessário -->
         </svg>
-        <div id="mapTooltip" style="position:absolute; background:black; color:white; padding:5px; border-radius:3px; display:none;"></div>
+        <div id="mapTooltip" class="map-tooltip"></div>
     `;
 
-    // Adicionar eventos de mouse para tooltip
-    const paths = mapContainer.querySelectorAll('path');
-    const tooltip = document.getElementById('mapTooltip');
+    const statePaths = mapContainer.querySelectorAll(".state-path");
+    const tooltip = document.getElementById("mapTooltip");
 
-    paths.forEach(path => {
-        path.addEventListener('mouseover', (e) => {
-            tooltip.style.display = 'block';
-            tooltip.textContent = `${path.dataset.name}: ${path.dataset.percentage}`;
+    statePaths.forEach(path => {
+        path.addEventListener("mouseover", (e) => {
+            tooltip.style.display = "block";
+            tooltip.textContent = `${path.dataset.state}: ${path.dataset.percentage}`;
             tooltip.style.left = `${e.pageX + 10}px`;
             tooltip.style.top = `${e.pageY + 10}px`;
+            path.style.opacity = 0.7; // Efeito de hover
         });
-        path.addEventListener('mouseout', () => {
-            tooltip.style.display = 'none';
+
+        path.addEventListener("mouseout", () => {
+            tooltip.style.display = "none";
+            path.style.opacity = 1; // Remover efeito de hover
         });
-        path.addEventListener('mousemove', (e) => {
+
+        path.addEventListener("mousemove", (e) => {
             tooltip.style.left = `${e.pageX + 10}px`;
             tooltip.style.top = `${e.pageY + 10}px`;
         });
     });
 
-    // Em um projeto real, o SVG seria muito mais complexo e detalhado
-    // e os dados de porcentagem seriam usados para colorir os estados dinamicamente.
+    // Função para obter a cor com base na porcentagem
+    function getColorByPercentage(percentage) {
+        const p = parseFloat(percentage);
+        if (p > 30) return "#ff6b35"; // Laranja forte
+        if (p > 20) return "#ff8c5a";
+        if (p > 10) return "#ffad7f";
+        return "#ffefbf";
+    }
+
+    // Aplicar cores aos estados com base nos dados
+    dataToRender.forEach(region => {
+        const path = document.getElementById(`state-${region.state.toLowerCase()}`);
+        if (path) {
+            path.style.fill = getColorByPercentage(region.percentage);
+        }
+    });
 }
 
 // Limpar pesquisa
