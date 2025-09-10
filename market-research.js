@@ -17,7 +17,7 @@ let currentSearchState = {
 };
 
 // Função para inicializar a pesquisa de mercado
-function initMarketResearch() {
+window.initMarketResearch = function() {
     console.log('Inicializando sistema de pesquisa de mercado...');
     
     // Verificar se os elementos existem
