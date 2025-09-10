@@ -1,7 +1,7 @@
 // spa.js - Sistema de Single Page Application
 
 document.addEventListener('DOMContentLoaded', () => {
-    const contentContainer = document.getElementById('content-container');
+    const contentContainer = document.getElementById('content');
     const navLinks = document.querySelectorAll('.nav__item');
 
     // Função para carregar o conteúdo da página
@@ -784,60 +784,6 @@ function getPesquisaContent() {
                 </div>
             </div>
 
-            <!-- Seção de Recursos -->
-            <div class="features-section">
-                <h2>O que nossa análise inclui:</h2>
-                <div class="features-grid">
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                        <h3>Análise de Preços</h3>
-                        <p>Preços médios, mínimos e máximos da concorrência, com sugestão de precificação otimizada para seu produto.</p>
-                    </div>
-                    
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-search"></i>
-                        </div>
-                        <h3>Tendências de Mercado</h3>
-                        <p>Dados do Google Trends e análise de sazonalidade para identificar os melhores momentos para vender.</p>
-                    </div>
-                    
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-bullseye"></i>
-                        </div>
-                        <h3>Índice de Demanda</h3>
-                        <p>Medição da demanda atual do produto baseada em múltiplas fontes de dados e comportamento do consumidor.</p>
-                    </div>
-                    
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-lightbulb"></i>
-                        </div>
-                        <h3>Insights Inteligentes</h3>
-                        <p>Recomendações personalizadas geradas por IA para otimizar sua estratégia de vendas e marketing.</p>
-                    </div>
-                    
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-map-marker-alt"></i>
-                        </div>
-                        <h3>Análise Geográfica</h3>
-                        <p>Dados demográficos e climáticos que podem influenciar a demanda do seu produto por região.</p>
-                    </div>
-                    
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-clock"></i>
-                        </div>
-                        <h3>Dados em Tempo Real</h3>
-                        <p>Informações atualizadas dos principais marketplaces e fontes de dados do mercado brasileiro.</p>
-                    </div>
-                </div>
-            </div>
-
             <!-- Seção de Histórico (será mostrada dinamicamente) -->
             <div class="history-section" id="searchHistorySection">
                 <h2>
@@ -847,6 +793,11 @@ function getPesquisaContent() {
                 <div class="history-list" id="searchHistoryList">
                     <!-- Histórico será inserido dinamicamente -->
                 </div>
+            </div>
+
+            <!-- Container de Resultados (será mostrado após a pesquisa) -->
+            <div class="market-results-container" id="marketResultsContainer" style="display: none;">
+                <!-- Resultados serão inseridos aqui via JavaScript -->
             </div>
         </div>
     `;
