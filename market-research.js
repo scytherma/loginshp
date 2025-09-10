@@ -281,55 +281,29 @@ async function performMarketResearch(query) {
 function showMarketResearchResults(results) {
     console.log('Exibindo resultados da pesquisa');
     
-    // Criar e mostrar modal
-    const modal = createResultsModal(results);
-    document.body.appendChild(modal);
-    
-    // Adicionar estilos se necessário
-    ensureModalStyles();
-    
-    // Animar entrada do modal
-    setTimeout(() => {
-        modal.classList.add('show');
-    }, 10);
+    // Renderizar os resultados diretamente na página
+    const resultsContainer = document.getElementById('marketResultsContainer');
+    if (resultsContainer) {
+        resultsContainer.innerHTML = generateResultsHTML(results);
+        resultsContainer.style.display = 'block';
+        
+        // Rolar para os resultados
+        resultsContainer.scrollIntoView({ behavior: 'smooth' });
+    } else {
+        console.error('Container de resultados não encontrado');
+    }
     
     // Salvar resultados atuais
     currentSearchState.lastResults = results;
+
+    // Renderizar gráficos após o HTML ser inserido no DOM
+    setTimeout(() => {
+        renderCharts(results.data);
+    }, 100);
 }
 
 // Criar modal de resultados
-function createResultsModal(results) {
-    const modal = document.createElement('div');
-    modal.className = 'market-research-modal';
-    modal.id = 'marketResearchModal';
-    
-    modal.innerHTML = `
-        <div class="modal-overlay" onclick="closeMarketResearchModal()"></div>
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2><i class="fas fa-chart-line"></i> Análise de Mercado</h2>
-                <button class="modal-close" onclick="closeMarketResearchModal()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <div class="modal-body">
-                ${generateResultsHTML(results)}
-            </div>
-            
-            <div class="modal-footer">
-                <button class="btn-secondary" onclick="closeMarketResearchModal()">
-                    Fechar
-                </button>
-                <button class="btn-primary" onclick="exportResults()">
-                    <i class="fas fa-download"></i> Exportar
-                </button>
-            </div>
-        </div>
-    `;
-    
-    return modal;
-}
+
 
 // Gerar HTML dos resultados
 function generateResultsHTML(results) {
@@ -361,7 +335,7 @@ function generateResultsHTML(results) {
                     </div>
                     <div class="summary-item">
                         <span class="label">Índice de Demanda:</span>
-                        <span class="value demand-${getDemandLevel(data.demand_index)}">${data.demand_index || 'N/A'}</span>
+                        <span class="value demand-${getDemandLevel(data.demand_index)}>${data.demand_index || 'N/A'}</span>
                     </div>
                 </div>
             </div>
@@ -380,8 +354,42 @@ function generateResultsHTML(results) {
                 <div class="trends-container">
                     ${generateTrendsHTML(data.trends)}
                 </div>
+                <div class="chart-grid">
+                    <div class="chart-card">
+                        <h4>Tendência de Busca</h4>
+                        <div class="chart-container">
+                            <canvas id="trendsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
             </div>
             
+            <!-- Demografia & Mercado -->
+            <div class="result-section">
+                <h3><i class="fas fa-users"></i> Demografia & Mercado</h3>
+                <div class="chart-grid">
+                    <div class="chart-card">
+                        <h4>Renda Média por Região</h4>
+                        <div class="chart-container">
+                            <canvas id="demographicsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Insights de Vendas -->
+            <div class="result-section">
+                <h3><i class="fas fa-chart-bar"></i> Insights de Vendas</h3>
+                <div class="chart-grid">
+                    <div class="chart-card">
+                        <h4>Insights de Vendas</h4>
+                        <div class="chart-container">
+                            <canvas id="salesInsightsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Insights e Recomendações -->
             <div class="result-section">
                 <h3><i class="fas fa-lightbulb"></i> Insights e Recomendações</h3>
@@ -466,16 +474,7 @@ function getDemandLevel(demandIndex) {
     return 'very-low';
 }
 
-// Fechar modal de resultados
-function closeMarketResearchModal() {
-    const modal = document.getElementById('marketResearchModal');
-    if (modal) {
-        modal.classList.remove('show');
-        setTimeout(() => {
-            modal.remove();
-        }, 300);
-    }
-}
+
 
 // Exportar resultados
 function exportResults() {
@@ -535,7 +534,6 @@ function showSearchError(message) {
     `;
     
     document.body.appendChild(errorModal);
-    ensureModalStyles();
 }
 
 // Funções de cache
@@ -609,295 +607,107 @@ function addToSearchHistory(query) {
     }
 }
 
-// Garantir que os estilos do modal existam
-function ensureModalStyles() {
-    if (document.getElementById('market-research-modal-styles')) {
-        return;
-    }
-    
-    const styles = document.createElement('style');
-    styles.id = 'market-research-modal-styles';
-    styles.textContent = `
-        .market-research-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 10000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-        }
-        
-        .market-research-modal.show {
-            opacity: 1;
-            visibility: visible;
-        }
-        
-        .modal-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-        }
-        
-        .modal-content {
-            position: relative;
-            background: white;
-            border-radius: 12px;
-            max-width: 90vw;
-            max-height: 90vh;
-            width: 1000px;
-            margin: 5vh auto;
-            overflow: hidden;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        }
-        
-        .modal-header {
-            background: #ff6b35;
-            color: white;
-            padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .modal-header h2 {
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .modal-close {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.5rem;
-            cursor: pointer;
-            padding: 5px;
-            border-radius: 4px;
-            transition: background 0.2s;
-        }
-        
-        .modal-close:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-        
-        .modal-body {
-            padding: 0;
-            max-height: calc(90vh - 140px);
-            overflow-y: auto;
-        }
-        
-        .modal-footer {
-            padding: 20px;
-            border-top: 1px solid #eee;
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-        }
-        
-        .results-container {
-            padding: 20px;
-        }
-        
-        .result-section {
-            margin-bottom: 30px;
-        }
-        
-        .result-section h3 {
-            color: #333;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 1.2rem;
-        }
-        
-        .summary-card {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 20px;
-        }
-        
-        .summary-item {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-        }
-        
-        .summary-item:last-child {
-            margin-bottom: 0;
-        }
-        
-        .summary-item .label {
-            font-weight: 600;
-            color: #666;
-        }
-        
-        .summary-item .value {
-            font-weight: 700;
-            color: #333;
-        }
-        
-        .demand-high { color: #28a745; }
-        .demand-medium { color: #ffc107; }
-        .demand-low { color: #fd7e14; }
-        .demand-very-low { color: #dc3545; }
-        
-        .price-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-        }
-        
-        .price-card {
-            background: white;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            padding: 20px;
-            text-align: center;
-        }
-        
-        .price-card.suggested {
-            border-color: #ff6b35;
-            background: #fff5f2;
-        }
-        
-        .price-label {
-            font-size: 0.9rem;
-            color: #666;
-            margin-bottom: 8px;
-        }
-        
-        .price-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #333;
-        }
-        
-        .price-value.suggested {
-            color: #ff6b35;
-        }
-        
-        .trend-item {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 15px;
-            background: white;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            border-left: 4px solid #e9ecef;
-        }
-        
-        .trend-value.up {
-            color: #28a745;
-        }
-        
-        .trend-value.down {
-            color: #dc3545;
-        }
-        
-        .insight-item {
-            display: flex;
-            gap: 15px;
-            padding: 15px;
-            background: white;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            border: 1px solid #e9ecef;
-        }
-        
-        .insight-icon {
-            flex-shrink: 0;
-            width: 40px;
-            height: 40px;
-            background: #ff6b35;
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .insight-content h4 {
-            margin: 0 0 8px 0;
-            color: #333;
-        }
-        
-        .insight-content p {
-            margin: 0;
-            color: #666;
-            line-height: 1.5;
-        }
-        
-        .no-data {
-            text-align: center;
-            color: #666;
-            font-style: italic;
-            padding: 20px;
-        }
-        
-        .error-message {
-            text-align: center;
-            padding: 40px;
-            color: #dc3545;
-        }
-        
-        .error-message i {
-            font-size: 3rem;
-            margin-bottom: 20px;
-        }
-        
-        .btn-primary, .btn-secondary {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: background 0.2s;
-        }
-        
-        .btn-primary {
-            background: #ff6b35;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: #e55a2b;
-        }
-        
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-        
-        .btn-secondary:hover {
-            background: #5a6268;
-        }
-        
-        .search-input-error {
-            color: #dc3545;
-            font-size: 0.875rem;
-            margin-top: 5px;
-            display: none;
-        }
-        
-        .market-search-container input.invalid {
-            border-color: #dc3545;
-        }
-    `;
-    
-    document.head.appendChild(styles);
-}
+
 
 // Exportar funções globais
 window.initMarketResearch = initMarketResearch;
-window.closeMarketResearchModal = closeMarketResearchModal;
+
 window.exportResults = exportResults;
+
+
+
+// Renderizar gráficos
+function renderCharts(data) {
+    // Tendência de Busca
+    if (data.trends_chart && data.trends_chart.labels && data.trends_chart.data) {
+        const ctxTrends = document.getElementById("trendsChart");
+        if (ctxTrends) {
+            new Chart(ctxTrends, {
+                type: "line",
+                data: {
+                    labels: data.trends_chart.labels,
+                    datasets: [{
+                        label: "Interesse ao longo do tempo",
+                        data: data.trends_chart.data,
+                        borderColor: "#ff6b35",
+                        backgroundColor: "rgba(255, 107, 53, 0.2)",
+                        fill: true,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    // Demografia & Mercado (exemplo de gráfico de barras para renda média)
+    if (data.demographics_chart && data.demographics_chart.labels && data.demographics_chart.data) {
+        const ctxDemographics = document.getElementById("demographicsChart");
+        if (ctxDemographics) {
+            new Chart(ctxDemographics, {
+                type: "bar",
+                data: {
+                    labels: data.demographics_chart.labels,
+                    datasets: [{
+                        label: "Renda Média",
+                        data: data.demographics_chart.data,
+                        backgroundColor: "#4CAF50",
+                        borderColor: "#4CAF50",
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    // Insights de Vendas (exemplo de gráfico de barras)
+    if (data.sales_insights_chart && data.sales_insights_chart.labels && data.sales_insights_chart.data) {
+        const ctxSales = document.getElementById("salesInsightsChart");
+        if (ctxSales) {
+            new Chart(ctxSales, {
+                type: "bar",
+                data: {
+                    labels: data.sales_insights_chart.labels,
+                    datasets: [{
+                        label: "Insights de Vendas",
+                        data: data.sales_insights_chart.data,
+                        backgroundColor: "#007bff",
+                        borderColor: "#007bff",
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+    }
+}
+
+// Atualizar showMarketResearchResults para chamar renderCharts
+// (Esta parte será feita com file_replace_text no próximo passo)
+
 
