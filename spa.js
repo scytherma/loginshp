@@ -1,7 +1,7 @@
 // spa.js - Sistema de Single Page Application
 
 document.addEventListener('DOMContentLoaded', () => {
-    const contentContainer = document.getElementById('content');
+    const contentContainer = document.getElementById('content-container');
     const navLinks = document.querySelectorAll('.nav__item');
 
     // Função para carregar o conteúdo da página
@@ -742,45 +742,73 @@ function getPesquisaContent() {
         <div class="market-research-page">
             <!-- Header da Pesquisa de Mercado -->
             <div class="market-research-header">
-                <h1>
-                    <i class="fas fa-search icon"></i>
-                    Pesquisa de Mercado
-                </h1>
-                <p>Descubra tendências, analise a concorrência e encontre oportunidades de negócio com nossa ferramenta de inteligência de mercado.</p>
+                <i class="fas fa-search icon"></i>
+                <h1>Pesquisa de Produto</h1>
             </div>
 
             <!-- Container de Pesquisa -->
             <div class="market-search-container">
-                <form class="search-form" onsubmit="return false;">
+                <div class="search-form">
                     <div class="search-input-group">
-                        <label for="marketSearchInput">Digite o produto ou termo que deseja analisar:</label>
                         <div class="search-input-wrapper">
-                            <input 
-                                type="text" 
-                                id="marketSearchInput" 
-                                placeholder="Ex: Blusa cacharrel manga longa feminina"
-                                maxlength="100"
-                                autocomplete="off"
-                            >
+                            <input type="text" id="marketSearchInput" placeholder="Nome do Produto">
                             <i class="fas fa-search search-input-icon"></i>
-                            <button type="button" id="clearSearchButton" title="Limpar">
-                                <i class="fas fa-times"></i>
-                            </button>
+                            <button id="clearSearchButton" title="Limpar">&times;</button>
                         </div>
+                        <div id="searchInputError" class="search-input-error"></div>
                     </div>
-                    
                     <div class="search-button-group">
-                        <button type="button" id="marketSearchButton">
-                            <i class="fas fa-search"></i>
-                            Analisar
-                        </button>
+                        <button id="marketSearchButton">Pesquisar</button>
                     </div>
-                </form>
-                
-                <!-- Indicador de Loading -->
+                </div>
                 <div id="searchLoadingIndicator">
                     <div class="loading-spinner"></div>
-                    Analisando dados de mercado...
+                    <span>Analisando... Por favor, aguarde.</span>
+                </div>
+            </div>
+
+            <!-- Container para os resultados da pesquisa -->
+            <div id="marketResearchResultsContainer" class="market-research-results-container">
+                <!-- Tendência de Busca e Regiões -->
+                <div class="result-card trend-region-section">
+                    <div class="trend-chart-container">
+                        <h2><i class="fas fa-chart-line icon"></i> Tendência de Busca</h2>
+                        <p>Gráfico de tendência de busca aqui</p>
+                    </div>
+                    <div class="region-map-container">
+                        <h2><i class="fas fa-map-marked-alt icon"></i> Regiões</h2>
+                        <p>Mapa do Brasil aqui</p>
+                    </div>
+                </div>
+
+                <!-- Demografia & Mercado e Concorrência -->
+                <div class="result-card demography-competition-section">
+                    <div class="demography-chart-container">
+                        <h2><i class="fas fa-users icon"></i> Demografia & Mercado</h2>
+                        <p>Gráfico de demografia e mercado aqui</p>
+                    </div>
+                    <div class="competition-table-container">
+                        <h2><i class="fas fa-balance-scale icon"></i> Concorrência</h2>
+                        <p>Tabela de concorrência aqui</p>
+                    </div>
+                </div>
+
+                <!-- Preço Sugerido e Insights de Vendas -->
+                <div class="result-card suggested-price-insights-section">
+                    <div class="suggested-price-container">
+                        <h2><i class="fas fa-dollar-sign icon"></i> Preço Sugerido</h2>
+                        <p>Preço sugerido aqui</p>
+                    </div>
+                    <div class="sales-insights-chart-container">
+                        <h2><i class="fas fa-chart-bar icon"></i> Insights de Vendas</h2>
+                        <p>Gráfico de insights de vendas aqui</p>
+                    </div>
+                </div>
+
+                <!-- Insights e Recomendações -->
+                <div class="result-card insights-recommendations-section">
+                    <h2><i class="fas fa-lightbulb icon"></i> Insights e Recomendações</h2>
+                    <p>Insights e recomendações aqui</p>
                 </div>
             </div>
 
@@ -793,11 +821,6 @@ function getPesquisaContent() {
                 <div class="history-list" id="searchHistoryList">
                     <!-- Histórico será inserido dinamicamente -->
                 </div>
-            </div>
-
-            <!-- Container de Resultados (será mostrado após a pesquisa) -->
-            <div class="market-results-container" id="marketResultsContainer" style="display: none;">
-                <!-- Resultados serão inseridos aqui via JavaScript -->
             </div>
         </div>
     `;
@@ -2379,3 +2402,4 @@ function showError(message) {
         errorDiv.remove();
     }, 5000);
 }
+
