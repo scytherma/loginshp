@@ -23,9 +23,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
             case 'pesquisa':
                 pageContent = getPesquisaContent();
-                setTimeout(() => {
+                // Chamar initMarketResearch após o conteúdo ser renderizado
+                if (typeof initMarketResearch === 'function') {
                     initMarketResearch();
-                }, 0);
+                } else {
+                    console.error("initMarketResearch não está definida. Verifique o carregamento de market-research.js");
+                    // Fallback para garantir que o botão Analisar funcione
+                    const searchButton = document.getElementById("marketSearchButton");
+                    const searchInput = document.getElementById("marketSearchInput");
+                    if (searchButton && searchInput) {
+                        searchButton.addEventListener("click", window.handleMarketSearch);
+                        searchInput.addEventListener("keypress", function(e) {
+                            if (e.key === "Enter") {
+                                window.handleMarketSearch();
+                            }
+                        });
+                    }
+                }
                 break;
             case 'dre':
                 pageContent = getDreContent();
