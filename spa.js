@@ -23,13 +23,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
             case 'pesquisa':
                 pageContent = getPesquisaContent();
-                setTimeout(() => {
-                    if (typeof initMarketResearch === 'function') {
-                        initMarketResearch();
-                    } else {
-                        console.error('A função initMarketResearch não foi encontrada.');
-                    }
-                }, 0);
+                if (typeof initMarketResearch === 'function') {
+                    initMarketResearch();
+                } else {
+                    console.error('A função initMarketResearch não foi encontrada.');
+                }
 
                 break;
             case 'dre':
