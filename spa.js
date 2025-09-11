@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const navLinks = document.querySelectorAll('.nav__item');
 
     // Função para carregar o conteúdo da página
-    function loadPage(route) {
+    window.loadPage = function loadPage(route) {
         let pageContent = '';
 
         switch (route) {
@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Função para atualizar a classe 'active' nos links da navegação
-    function updateActiveClass(route) {
+    window.updateActiveClass = function updateActiveClass(route) {
         navLinks.forEach(link => {
             if (link.getAttribute('data-route') === route) {
                 link.classList.add('active');
