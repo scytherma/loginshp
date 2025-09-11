@@ -92,8 +92,8 @@ function enableAllFeatures() {
         item.onclick = () => {
             const route = item.getAttribute("data-route");
             if (route) {
-                loadPage(route);
-                updateActiveClass(route);
+                window.loadPage(route);
+                window.updateActiveClass(route);
             }
         };
         const lockIcon = item.querySelector(".lock-icon");
