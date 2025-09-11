@@ -107,9 +107,11 @@ function showInputError(message) {
     if (!errorElement) {
         errorElement = document.createElement('div');
         errorElement.id = 'searchInputError';
-        errorElement.className = 'input-error';
-        const searchInput = document.getElementById('marketSearchInput');
-        searchInput.parentNode.insertBefore(errorElement, searchInput.nextSibling);
+        errorElement.className = 'search-input-error';
+        const searchContainer = document.querySelector('.market-search-container');
+        if (searchContainer) {
+            searchContainer.appendChild(errorElement);
+        }
     }
     errorElement.textContent = message;
     errorElement.style.display = 'block';
@@ -233,7 +235,7 @@ function setSearchLoadingState(isLoading) {
         }
     } else {
         searchButton.disabled = false;
-        searchButton.innerHTML = '<i class="fas fa-search"></i> Analisar';
+        searchButton.innerHTML = 'Pesquisar';
         searchInput.disabled = false;
         
         if (loadingIndicator) {
@@ -251,24 +253,31 @@ async function performMarketResearch(query) {
     if (sessionError || !session || !session.access_token) {
         throw new Error('Usuário não autenticado');
     }
-
-   const response = await fetch(`${SUPABASE_FUNCTIONS_BASE_URL}/market-research`, {        method: 'POST',
+    
+    const accessToken = session.access_token;
+    
+    // Fazer requisição para Edge Function
+    const response = await fetch(`${SUPABASE_FUNCTIONS_BASE_URL}/market-research`, {
+        method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`
+            'Authorization': `Bearer ${accessToken}`
         },
         body: JSON.stringify({
             query: query,
-            user_id: session.user.id
+            timestamp: new Date().toISOString()
         })
     });
-
+    
     if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Erro na pesquisa');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Erro na pesquisa: ${response.status}`);
     }
-
-    return await response.json();
+    
+    const results = await response.json();
+    console.log('Resultados da pesquisa:', results);
+    
+    return results;
 }
 
 // Exibir resultados da pesquisa
@@ -331,7 +340,7 @@ function updateTrendSection(trendsData) {
     renderTrendChart(trendsData);
 }
 
-// Atualizar seção de regiões - VERSÃO MELHORADA
+// Atualizar seção de regiões - VERSÃO SIMPLIFICADA
 function updateRegionSection(regionsData) {
     const regionContainer = document.querySelector('.region-map-container');
     if (!regionContainer) return;
@@ -339,19 +348,21 @@ function updateRegionSection(regionsData) {
     regionContainer.innerHTML = `
         <h2><i class="fas fa-map-marked-alt icon"></i> Regiões</h2>
         <div class="region-content">
-            <div id="brazilMapContainer">
-                <!-- O mapa será carregado aqui -->
+            <div id="brasil-map-container" class="map-svg-container">
+                <!-- O SVG do mapa será carregado aqui -->
             </div>
+            <div id="tooltip" class="tooltip"></div>
+            <div id="details-panel" class="details-panel"></div>
         </div>
     `;
 
-    // Renderizar mapa do Brasil MELHORADO
-    renderBrazilMapImproved(regionsData);
+    // Renderizar mapa do Brasil usando a versão original
+    renderBrazilMapOriginal(regionsData);
 }
 
-// NOVA FUNÇÃO: Renderizar Mapa do Brasil Melhorado
-function renderBrazilMapImproved(regionsData) {
-    const mapContainer = document.getElementById("brazilMapContainer");
+// Renderizar Mapa do Brasil - Versão Original Simplificada
+function renderBrazilMapOriginal(regionsData) {
+    const mapContainer = document.getElementById("brasil-map-container");
     if (!mapContainer) return;
 
     // Dados de exemplo se não houver dados reais
@@ -387,29 +398,17 @@ function renderBrazilMapImproved(regionsData) {
 
     const dataToRender = regionsData && regionsData.length > 0 ? regionsData : sampleRegions;
     
-    // Carregar o SVG melhorado do mapa do Brasil
-    fetch('./brasil-map-github.svg')
+    // Carregar o SVG do mapa do Brasil
+    fetch('./brasil-map.svg')
         .then(response => response.text())
         .then(svgData => {
             mapContainer.innerHTML = svgData;
-            
-            // Configurar responsividade
-            const svg = mapContainer.querySelector('svg');
-            if (svg) {
-                svg.setAttribute('width', '100%');
-                svg.setAttribute('height', 'auto');
-                svg.style.maxWidth = '100%';
-                svg.style.height = 'auto';
-            }
             
             // Aplicar cores aos estados baseado nos dados
             dataToRender.forEach(region => {
                 const stateElement = mapContainer.querySelector(`#${region.state}`);
                 if (stateElement) {
-                    // Remover classes de cor anteriores
-                    stateElement.classList.remove('pessimo', 'ruim', 'fraco', 'mediano', 'bom', 'excelente');
-                    
-                    // Adicionar nova classe baseada na porcentagem
+                    // Adicionar classe baseada na porcentagem
                     const colorClass = getColorClass(region.percentage);
                     stateElement.classList.add('state', colorClass);
                     
@@ -424,9 +423,8 @@ function renderBrazilMapImproved(regionsData) {
             setupMapTooltips(mapContainer);
         })
         .catch(error => {
-            console.error('Erro ao carregar o mapa SVG melhorado:', error);
-            // Fallback para o mapa original se o melhorado não carregar
-            renderBrazilMapOriginal(dataToRender);
+            console.error('Erro ao carregar o mapa SVG:', error);
+            mapContainer.innerHTML = '<div class="loading">Erro ao carregar o mapa</div>';
         });
 }
 
@@ -456,231 +454,337 @@ function setupMapTooltips(mapContainer) {
             
             // Obter dados do estado
             const stateName = this.getAttribute('data-name') || this.id;
-            const percentage = this.getAttribute('data-percentage') || '0';
-            const searches = this.getAttribute('data-searches') || '0';
-            const trend = this.getAttribute('data-trend') || '0';
+            const percentage = this.getAttribute('data-percentage') || 0;
+            const searches = this.getAttribute('data-searches') || 0;
+            const trend = this.getAttribute('data-trend') || 0;
             
             // Atualizar conteúdo do tooltip
             tooltip.innerHTML = `
-                <div class="state-name">${stateName}</div>
-                <div class="state-data">Interesse: ${percentage}%</div>
-                <div class="state-data">Buscas: ${parseInt(searches).toLocaleString('pt-BR')}</div>
-                <div class="state-data">Tendência: ${trend > 0 ? '+' : ''}${trend}%</div>
+                <strong>${stateName}</strong><br>
+                Interesse: ${percentage}%<br>
+                Buscas: ${searches}<br>
+                Tendência: ${trend > 0 ? '+' : ''}${trend}%
             `;
             
-            // Mostrar tooltip
+            // Posicionar tooltip
+            tooltip.style.left = e.pageX + 10 + 'px';
+            tooltip.style.top = e.pageY - 10 + 'px';
             tooltip.style.display = 'block';
-            
-            // Destacar estado
-            this.style.strokeWidth = '3';
-            this.style.filter = 'brightness(1.1)';
-        });
-        
-        state.addEventListener('mousemove', function(e) {
-            if (tooltip) {
-                tooltip.style.left = (e.pageX + 10) + 'px';
-                tooltip.style.top = (e.pageY - 10) + 'px';
-            }
         });
         
         state.addEventListener('mouseleave', function() {
             if (tooltip) {
                 tooltip.style.display = 'none';
             }
-            
-            // Remover destaque
-            this.style.strokeWidth = '';
-            this.style.filter = '';
         });
         
-        // Suporte para touch em dispositivos móveis
-        state.addEventListener('touchstart', function(e) {
-            e.preventDefault();
-            this.dispatchEvent(new Event('mouseenter'));
-        });
-        
-        state.addEventListener('touchend', function(e) {
-            e.preventDefault();
-            setTimeout(() => {
-                this.dispatchEvent(new Event('mouseleave'));
-            }, 3000);
+        state.addEventListener('mousemove', function(e) {
+            if (tooltip) {
+                tooltip.style.left = e.pageX + 10 + 'px';
+                tooltip.style.top = e.pageY - 10 + 'px';
+            }
         });
     });
 }
 
-// Manter função original como fallback
-function renderBrazilMapOriginal(regionsData) {
-    const mapContainer = document.getElementById("brazilMapContainer");
-    if (!mapContainer) return;
-
-    const dataToRender = regionsData;
-
-    // SVG simplificado do mapa do Brasil (versão original)
-    mapContainer.innerHTML = `
-        <svg width="100%" height="100%" viewBox="0 0 500 500">
-            <!-- Exemplo de alguns estados com caminhos simplificados -->
-            <path d="M200,200 L250,200 L250,250 L200,250 Z" id="state-sp" data-state="São Paulo" data-percentage="${dataToRender.find(r => r.state === 'SP')?.percentage || 0}%" fill="#ff6b35" class="state-path"></path>
-            <path d="M250,200 L300,200 L300,250 L250,250 Z" id="state-rj" data-state="Rio de Janeiro" data-percentage="${dataToRender.find(r => r.state === 'RJ')?.percentage || 0}%" fill="#ff8c5a" class="state-path"></path>
-            <path d="M150,150 L200,150 L200,200 L150,200 Z" id="state-mg" data-state="Minas Gerais" data-percentage="${dataToRender.find(r => r.state === 'MG')?.percentage || 0}%" fill="#ffad7f" class="state-path"></path>
-            <path d="M100,250 L150,250 L150,300 L100,300 Z" id="state-rs" data-state="Rio Grande do Sul" data-percentage="${dataToRender.find(r => r.state === 'RS')?.percentage || 0}%" fill="#ffce9f" class="state-path"></path>
-            <path d="M150,250 L200,250 L200,300 L150,300 Z" id="state-pr" data-state="Paraná" data-percentage="${dataToRender.find(r => r.state === 'PR')?.percentage || 0}%" fill="#ffefbf" class="state-path"></path>
-            <path d="M300,100 L350,100 L350,150 L300,150 Z" id="state-ba" data-state="Bahia" data-percentage="${dataToRender.find(r => r.state === 'BA')?.percentage || 0}%" fill="#ff6b35" class="state-path"></path>
-            <path d="M350,100 L400,100 L400,150 L350,150 Z" id="state-pe" data-state="Pernambuco" data-percentage="${dataToRender.find(r => r.state === 'PE')?.percentage || 0}%" fill="#ff8c5a" class="state-path"></path>
-            <path d="M400,100 L450,100 L450,150 L400,150 Z" id="state-ce" data-state="Ceará" data-percentage="${dataToRender.find(r => r.state === 'CE')?.percentage || 0}%" fill="#ffad7f" class="state-path"></path>
-            <path d="M100,50 L150,50 L150,100 L100,100 Z" id="state-am" data-state="Amazonas" data-percentage="${dataToRender.find(r => r.state === 'AM')?.percentage || 0}%" fill="#ffce9f" class="state-path"></path>
-            <path d="M250,150 L300,150 L300,200 L250,200 Z" id="state-df" data-state="Distrito Federal" data-percentage="${dataToRender.find(r => r.state === 'DF')?.percentage || 0}%" fill="#ffefbf" class="state-path"></path>
-        </svg>
-        <div id="mapTooltip" class="map-tooltip"></div>
-    `;
-
-    const statePaths = mapContainer.querySelectorAll(".state-path");
-    const tooltip = document.getElementById("mapTooltip");
-
-    statePaths.forEach(path => {
-        path.addEventListener("mouseenter", (e) => {
-            const state = e.target.getAttribute("data-state");
-            const percentage = e.target.getAttribute("data-percentage");
-            tooltip.innerHTML = `<strong>${state}</strong><br>Interesse: ${percentage}`;
-            tooltip.style.display = "block";
-        });
-
-        path.addEventListener("mousemove", (e) => {
-            tooltip.style.left = e.pageX + 10 + "px";
-            tooltip.style.top = e.pageY - 10 + "px";
-        });
-
-        path.addEventListener("mouseleave", () => {
-            tooltip.style.display = "none";
-        });
-    });
-}
-
-// Continuar com as outras funções originais...
+// Atualizar seção de demografia e mercado
 function updateDemographySection(demographicsData) {
-    const demoContainer = document.querySelector('.demographics-chart-container');
-    if (!demoContainer) return;
+    const demographyContainer = document.querySelector('.demography-chart-container');
+    if (!demographyContainer) return;
 
-    demoContainer.innerHTML = `
+    demographyContainer.innerHTML = `
         <h2><i class="fas fa-users icon"></i> Demografia & Mercado</h2>
-        <div class="demographics-content">
-            <p>Análise demográfica do público-alvo</p>
-            <canvas id="demographicsChart" width="400" height="200"></canvas>
+        <div class="demography-content">
+            <p>Renda Média</p>
+            <canvas id="incomeChart" width="300" height="150"></canvas>
         </div>
     `;
 
-    renderDemographicsChart(demographicsData);
+    // Renderizar gráfico de renda
+    renderIncomeChart(demographicsData?.income_distribution);
 }
 
+// Atualizar seção de concorrência
 function updateCompetitionSection(competitionData) {
-    const compContainer = document.querySelector('.competition-table-container');
-    if (!compContainer) return;
+    const competitionContainer = document.querySelector('.competition-table-container');
+    if (!competitionContainer) return;
 
-    compContainer.innerHTML = `
+    competitionContainer.innerHTML = `
         <h2><i class="fas fa-balance-scale icon"></i> Concorrência</h2>
         <div class="competition-content">
-            <p>Análise da concorrência</p>
-            <div id="competitionTable">
-                <table class="competition-table">
-                    <thead>
-                        <tr>
-                            <th>Concorrente</th>
-                            <th>Preço Médio</th>
-                            <th>Avaliação</th>
-                            <th>Volume</th>
-                        </tr>
-                    </thead>
-                    <tbody id="competitionTableBody">
-                        <!-- Dados serão inseridos aqui -->
-                    </tbody>
-                </table>
-            </div>
+            <p>Preço e Avaliações</p>
+            <table class="competition-table">
+                <thead>
+                    <tr>
+                        <th>Produto</th>
+                        <th>Preço</th>
+                        <th>Avaliação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${generateCompetitionTableRows(competitionData)}
+                </tbody>
+            </table>
         </div>
     `;
-
-    renderCompetitionTable(competitionData);
 }
 
-function updateSuggestedPriceSection(priceData) {
+// Atualizar seção de preço sugerido
+function updateSuggestedPriceSection(priceAnalysis) {
     const priceContainer = document.querySelector('.suggested-price-container');
     if (!priceContainer) return;
 
     priceContainer.innerHTML = `
         <h2><i class="fas fa-dollar-sign icon"></i> Preço Sugerido</h2>
         <div class="price-content">
-            <p>Análise de precificação</p>
-            <div class="price-suggestion">
-                <div class="price-range">
-                    <span class="price-label">Faixa Recomendada:</span>
-                    <span class="price-value">R$ 50,00 - R$ 80,00</span>
-                </div>
-                <div class="price-optimal">
-                    <span class="price-label">Preço Ótimo:</span>
-                    <span class="price-value optimal">R$ 65,00</span>
-                </div>
-            </div>
+            <div class="suggested-price-value">R$ ${priceAnalysis?.suggested_price || '105,00'}</div>
+            <div class="profit-margin">Margem de Lucro<br><strong>${priceAnalysis?.profit_margin || '30'}%</strong></div>
         </div>
     `;
 }
 
-function updateSalesInsightsSection(salesData) {
-    const salesContainer = document.querySelector('.sales-insights-container');
+// Atualizar seção de insights de vendas
+function updateSalesInsightsSection(salesInsights) {
+    const salesContainer = document.querySelector('.sales-insights-chart-container');
     if (!salesContainer) return;
 
     salesContainer.innerHTML = `
         <h2><i class="fas fa-chart-bar icon"></i> Insights de Vendas</h2>
         <div class="sales-content">
-            <p>Análise de potencial de vendas</p>
-            <canvas id="salesChart" width="400" height="200"></canvas>
+            <canvas id="salesInsightsChart" width="300" height="150"></canvas>
         </div>
     `;
 
-    renderSalesChart(salesData);
+    // Renderizar gráfico de insights de vendas
+    renderSalesInsightsChart(salesInsights);
 }
 
+// Atualizar seção de insights e recomendações
 function updateInsightsRecommendationsSection(insightsData) {
-    const insightsContainer = document.querySelector('.insights-recommendations-container');
+    const insightsContainer = document.querySelector('.insights-recommendations-section');
     if (!insightsContainer) return;
 
     insightsContainer.innerHTML = `
         <h2><i class="fas fa-lightbulb icon"></i> Insights e Recomendações</h2>
         <div class="insights-content">
-            <div class="recommendations-list">
-                <div class="recommendation-item">
-                    <i class="fas fa-check-circle"></i>
-                    <span>Produto com alta demanda na região Sudeste</span>
-                </div>
-                <div class="recommendation-item">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <span>Concorrência moderada - oportunidade de entrada</span>
-                </div>
-                <div class="recommendation-item">
-                    <i class="fas fa-trending-up"></i>
-                    <span>Tendência de crescimento nos próximos 3 meses</span>
-                </div>
-            </div>
+            <ul>
+                ${generateInsightsRecommendationsList(insightsData)}
+            </ul>
         </div>
     `;
 }
 
-// Funções de renderização de gráficos (placeholder)
-function renderTrendChart(data) {
-    // Implementar gráfico de tendência
-    console.log('Renderizando gráfico de tendência:', data);
+// Gerar linhas da tabela de concorrência
+function generateCompetitionTableRows(competitionData) {
+    if (!competitionData || competitionData.length === 0) {
+        return '<tr><td colspan="3">Nenhum dado de concorrência disponível.</td></tr>';
+    }
+    return competitionData.map(item => `
+        <tr>
+            <td>${item.product_name || 'N/A'}</td>
+            <td>R$ ${item.price || 'N/A'}</td>
+            <td>${generateStarRating(item.rating)}</td>
+        </tr>
+    `).join('');
 }
 
-function renderDemographicsChart(data) {
-    // Implementar gráfico demográfico
-    console.log('Renderizando gráfico demográfico:', data);
+// Gerar estrelas de avaliação
+function generateStarRating(rating) {
+    if (rating === undefined || rating === null) return 'N/A';
+    let stars = '';
+    for (let i = 0; i < 5; i++) {
+        if (i < rating) {
+            stars += '<i class="fas fa-star filled"></i>';
+        } else {
+            stars += '<i class="fas fa-star"></i>';
+        }
+    }
+    return stars;
 }
 
-function renderCompetitionTable(data) {
-    // Implementar tabela de concorrência
-    console.log('Renderizando tabela de concorrência:', data);
+// Gerar lista de insights e recomendações
+function generateInsightsRecommendationsList(insightsData) {
+    if (!insightsData || insightsData.length === 0) {
+        return '<li>Nenhum insight ou recomendação disponível.</li>';
+    }
+    return insightsData.map(insight => `
+        <li>
+            <strong>${insight.title}:</strong> ${insight.description}
+        </li>
+    `).join('');
 }
 
-function renderSalesChart(data) {
-    // Implementar gráfico de vendas
-    console.log('Renderizando gráfico de vendas:', data);
+// Renderizar Gráfico de Tendência de Busca
+function renderTrendChart(trendsData) {
+    const canvas = document.getElementById("trendChart");
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+
+    // Gerar dados de exemplo para os últimos 6 meses se não houver dados reais
+    const today = new Date();
+    const sampleData = Array.from({ length: 6 }, (_, i) => {
+        const date = new Date(today.getFullYear(), today.getMonth() - (5 - i), 1);
+        const monthYear = date.toLocaleString('pt-BR', { month: 'short', year: '2-digit' });
+        return { period: monthYear, value: Math.floor(Math.random() * 60) + 40 }; // Valores aleatórios entre 40 e 100
+    });
+
+    const dataToRender = trendsData && trendsData.length > 0 ? trendsData : sampleData;
+
+    // Limpar canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const labels = dataToRender.map(t => t.period);
+    const values = dataToRender.map(t => t.value);
+
+    // Configurações do gráfico
+    const padding = 40;
+    const chartWidth = canvas.width - 2 * padding;
+    const chartHeight = canvas.height - 2 * padding;
+    const maxValue = Math.max(...values);
+    const minValue = Math.min(...values);
+    const valueRange = maxValue - minValue || 1;
+
+    // Desenhar eixos
+    ctx.strokeStyle = '#ddd';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(padding, padding);
+    ctx.lineTo(padding, canvas.height - padding);
+    ctx.lineTo(canvas.width - padding, canvas.height - padding);
+    ctx.stroke();
+
+    // Desenhar linha do gráfico
+    ctx.strokeStyle = '#ff6b35';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+
+    values.forEach((value, index) => {
+        const x = padding + (index / (values.length - 1)) * chartWidth;
+        const y = canvas.height - padding - ((value - minValue) / valueRange) * chartHeight;
+        
+        if (index === 0) {
+            ctx.moveTo(x, y);
+        } else {
+            ctx.lineTo(x, y);
+        }
+    });
+
+    ctx.stroke();
+
+    // Desenhar pontos
+    ctx.fillStyle = '#ff6b35';
+    values.forEach((value, index) => {
+        const x = padding + (index / (values.length - 1)) * chartWidth;
+        const y = canvas.height - padding - ((value - minValue) / valueRange) * chartHeight;
+        
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, 2 * Math.PI);
+        ctx.fill();
+    });
+
+    // Desenhar labels
+    ctx.fillStyle = '#666';
+    ctx.font = '12px Arial';
+    ctx.textAlign = 'center';
+    labels.forEach((label, index) => {
+        const x = padding + (index / (labels.length - 1)) * chartWidth;
+        ctx.fillText(label, x, canvas.height - 10);
+    });
+}
+
+// Renderizar gráfico de renda
+function renderIncomeChart(incomeData) {
+    const canvas = document.getElementById("incomeChart");
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+
+    // Dados de exemplo se não houver dados reais
+    const sampleIncomeData = [
+        { range: "Até R$ 2k", percentage: 25 },
+        { range: "R$ 2k-5k", percentage: 35 },
+        { range: "R$ 5k-10k", percentage: 25 },
+        { range: "Acima R$ 10k", percentage: 15 }
+    ];
+
+    const dataToRender = incomeData && incomeData.length > 0 ? incomeData : sampleIncomeData;
+
+    // Limpar canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const padding = 30;
+    const chartWidth = canvas.width - 2 * padding;
+    const chartHeight = canvas.height - 2 * padding;
+    const maxValue = Math.max(...dataToRender.map(d => d.percentage));
+
+    // Desenhar barras
+    const barWidth = chartWidth / dataToRender.length - 10;
+    dataToRender.forEach((item, index) => {
+        const x = padding + index * (chartWidth / dataToRender.length) + 5;
+        const barHeight = (item.percentage / maxValue) * chartHeight;
+        const y = canvas.height - padding - barHeight;
+
+        // Desenhar barra
+        ctx.fillStyle = '#ff6b35';
+        ctx.fillRect(x, y, barWidth, barHeight);
+
+        // Desenhar valor
+        ctx.fillStyle = '#333';
+        ctx.font = '12px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${item.percentage}%`, x + barWidth / 2, y - 5);
+    });
+}
+
+// Renderizar gráfico de insights de vendas
+function renderSalesInsightsChart(salesData) {
+    const canvas = document.getElementById("salesInsightsChart");
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+
+    // Dados de exemplo se não houver dados reais
+    const sampleSalesData = [
+        { category: "Vendas Online", value: 65 },
+        { category: "Vendas Físicas", value: 35 }
+    ];
+
+    const dataToRender = salesData && salesData.length > 0 ? salesData : sampleSalesData;
+
+    // Limpar canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const radius = Math.min(centerX, centerY) - 20;
+
+    let currentAngle = 0;
+    const colors = ['#ff6b35', '#36a2eb', '#ffcd56', '#4bc0c0'];
+
+    dataToRender.forEach((item, index) => {
+        const sliceAngle = (item.value / 100) * 2 * Math.PI;
+
+        // Desenhar fatia
+        ctx.fillStyle = colors[index % colors.length];
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
+        ctx.closePath();
+        ctx.fill();
+
+        // Desenhar label
+        const labelAngle = currentAngle + sliceAngle / 2;
+        const labelX = centerX + Math.cos(labelAngle) * (radius * 0.7);
+        const labelY = centerY + Math.sin(labelAngle) * (radius * 0.7);
+
+        ctx.fillStyle = '#fff';
+        ctx.font = '12px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${item.value}%`, labelX, labelY);
+
+        currentAngle += sliceAngle;
+    });
 }
 
 // Funções de cache
@@ -694,20 +798,20 @@ function getCachedResult(query) {
             }
         }
     } catch (error) {
-        console.error('Erro ao ler cache:', error);
+        console.error('Erro ao acessar cache:', error);
     }
     return null;
 }
 
 function setCachedResult(query, result) {
     try {
-        const cacheData = {
+        const data = {
             result: result,
             timestamp: Date.now()
         };
-        localStorage.setItem(`market_research_${query}`, JSON.stringify(cacheData));
+        localStorage.setItem(`market_research_${query}`, JSON.stringify(data));
     } catch (error) {
-        console.error('Erro ao salvar cache:', error);
+        console.error('Erro ao salvar no cache:', error);
     }
 }
 
