@@ -252,7 +252,7 @@ async function performMarketResearch(query) {
         throw new Error('Usuário não autenticado');
     }
 
-    const response = await fetch('https://api.lucrecerto.com/market-research', {
+  const response = await fetch(`${SUPABASE_FUNCTIONS_BASE_URL}/market-research`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
