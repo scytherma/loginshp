@@ -898,3 +898,252 @@ body.dark-theme .insights-content strong {
 }
 
 
+
+
+/* Estilos para o placeholder do mapa */
+.map-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    background: #f8f9fa;
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+.placeholder-content {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.placeholder-content i {
+    display: block;
+    margin-bottom: 16px;
+}
+
+.placeholder-content h3 {
+    margin-bottom: 8px;
+    font-size: 1.2rem;
+}
+
+.placeholder-content p {
+    margin: 0;
+    max-width: 300px;
+    margin: 0 auto;
+    line-height: 1.5;
+}
+
+/* Estilos para o mapa SVG */
+#brazilMapContainer {
+    position: relative;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+#brazilMapContainer svg {
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+}
+
+/* Estilos para tooltip do mapa */
+.map-tooltip {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    pointer-events: none;
+    z-index: 1000;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    display: none;
+}
+
+/* Responsividade para o mapa */
+@media (max-width: 768px) {
+    .map-placeholder {
+        min-height: 250px;
+    }
+    
+    .placeholder-content {
+        padding: 30px 15px;
+    }
+    
+    .placeholder-content i {
+        font-size: 36px !important;
+    }
+    
+    .placeholder-content h3 {
+        font-size: 1.1rem;
+    }
+    
+    .placeholder-content p {
+        font-size: 13px;
+    }
+}
+
+/* Tema escuro para o placeholder */
+body.dark-theme .map-placeholder {
+    background: #2d3748;
+    border-color: #4a5568;
+}
+
+body.dark-theme .placeholder-content h3 {
+    color: #e2e8f0 !important;
+}
+
+body.dark-theme .placeholder-content p {
+    color: #a0aec0 !important;
+}
+
+body.dark-theme .placeholder-content i {
+    color: #4a5568 !important;
+}
+
+
+
+/* Estilos específicos para o SVG do mapa do Brasil do GitHub */
+#Layer_1 {
+    width: 100% !important;
+    height: auto !important;
+    max-width: 100%;
+}
+
+#Layer_1 .state {
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    stroke: #FFFFFF !important;
+    stroke-width: 1.5 !important;
+}
+
+#Layer_1 .state:hover {
+    stroke-width: 3 !important;
+    filter: brightness(1.1) !important;
+}
+
+#Layer_1 .state.pessimo { 
+    fill: #E53935 !important; 
+}
+
+#Layer_1 .state.ruim { 
+    fill: #FB8C00 !important; 
+}
+
+#Layer_1 .state.fraco { 
+    fill: #FFEB3B !important; 
+}
+
+#Layer_1 .state.mediano { 
+    fill: #43A047 !important; 
+}
+
+#Layer_1 .state.bom { 
+    fill: #29B6F6 !important; 
+}
+
+#Layer_1 .state.excelente { 
+    fill: #0D47A1 !important; 
+}
+
+/* Garantir que o SVG seja responsivo */
+.map-container svg {
+    width: 100% !important;
+    height: auto !important;
+    max-width: 100%;
+}
+
+/* Estilos para o tooltip do mapa */
+.map-tooltip {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-size: 14px;
+    pointer-events: none;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    max-width: 250px;
+    line-height: 1.4;
+}
+
+.map-tooltip .state-name {
+    font-weight: bold;
+    font-size: 16px;
+    margin-bottom: 5px;
+    color: #ff6b35;
+}
+
+.map-tooltip .state-data {
+    margin: 3px 0;
+}
+
+.map-tooltip .trend-positive {
+    color: #4CAF50;
+}
+
+.map-tooltip .trend-negative {
+    color: #f44336;
+}
+
+/* Placeholder do mapa */
+.map-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    text-align: center;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border: 2px dashed #dee2e6;
+    min-height: 300px;
+}
+
+.map-placeholder .placeholder-icon {
+    font-size: 4rem;
+    color: #adb5bd;
+    margin-bottom: 20px;
+}
+
+.map-placeholder h3 {
+    color: #495057;
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+}
+
+.map-placeholder p {
+    color: #6c757d;
+    font-size: 1rem;
+    max-width: 400px;
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* Tema escuro para o mapa */
+body.dark-theme .map-placeholder {
+    background: #2d3748;
+    border-color: #4a5568;
+}
+
+body.dark-theme .map-placeholder .placeholder-icon {
+    color: #718096;
+}
+
+body.dark-theme .map-placeholder h3 {
+    color: #e2e8f0;
+}
+
+body.dark-theme .map-placeholder p {
+    color: #a0aec0;
+}
+
+body.dark-theme .map-tooltip {
+    background: rgba(45, 55, 72, 0.95);
+    border: 1px solid #4a5568;
+}
+
