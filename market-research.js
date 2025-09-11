@@ -346,15 +346,326 @@ function updateRegionSection(regionsData) {
         <h2><i class="fas fa-map-marked-alt icon"></i> Regiões</h2>
         <div class="region-content">
             <div id="brazilMapContainer">
-                <svg id="brazilMap" width="300" height="250" viewBox="0 0 300 250">
-                    <!-- Mapa do Brasil será renderizado aqui -->
-                </svg>
+                <!-- O mapa será carregado aqui -->
             </div>
         </div>
     `;
 
-    // Renderizar mapa do Brasil
-    renderBrazilMap(regionsData);
+    // Renderizar mapa do Brasil MELHORADO
+    renderBrazilMapImproved(regionsData);
+}
+
+// NOVA FUNÇÃO: Renderizar Mapa do Brasil Melhorado
+function renderBrazilMapImproved(regionsData) {
+    const mapContainer = document.getElementById("brazilMapContainer");
+    if (!mapContainer) return;
+
+    // Dados de exemplo se não houver dados reais
+    const sampleRegions = [
+        { state: "SP", percentage: 82, searches: 25600, trend: 35 },
+        { state: "RJ", percentage: 78, searches: 11800, trend: 28 },
+        { state: "MG", percentage: 65, searches: 12500, trend: 22 },
+        { state: "PR", percentage: 72, searches: 9200, trend: 25 },
+        { state: "SC", percentage: 74, searches: 5900, trend: 24 },
+        { state: "RS", percentage: 69, searches: 8700, trend: 19 },
+        { state: "BA", percentage: 52, searches: 8900, trend: 15 },
+        { state: "PE", percentage: 46, searches: 7100, trend: 13 },
+        { state: "CE", percentage: 38, searches: 5600, trend: 7 },
+        { state: "GO", percentage: 48, searches: 6700, trend: 10 },
+        { state: "DF", percentage: 75, searches: 2100, trend: 20 },
+        { state: "ES", percentage: 68, searches: 3400, trend: 18 },
+        { state: "MT", percentage: 35, searches: 5100, trend: 6 },
+        { state: "MS", percentage: 42, searches: 3800, trend: 9 },
+        { state: "TO", percentage: 33, searches: 2100, trend: 5 },
+        { state: "MA", percentage: 28, searches: 4200, trend: 4 },
+        { state: "PI", percentage: 31, searches: 2600, trend: 1 },
+        { state: "RN", percentage: 39, searches: 2400, trend: 8 },
+        { state: "PB", percentage: 41, searches: 2900, trend: 11 },
+        { state: "AL", percentage: 45, searches: 3200, trend: 12 },
+        { state: "SE", percentage: 44, searches: 1900, trend: 14 },
+        { state: "PA", percentage: 25, searches: 6800, trend: 2 },
+        { state: "AM", percentage: 18, searches: 4500, trend: 8 },
+        { state: "AC", percentage: 15, searches: 1250, trend: 5 },
+        { state: "RO", percentage: 19, searches: 1800, trend: 3 },
+        { state: "RR", percentage: 16, searches: 650, trend: -1 },
+        { state: "AP", percentage: 22, searches: 890, trend: -3 }
+    ];
+
+    const dataToRender = regionsData && regionsData.length > 0 ? regionsData : sampleRegions;
+    
+    // Carregar o SVG melhorado do mapa do Brasil
+    fetch('./brasil-map-github.svg')
+        .then(response => response.text())
+        .then(svgData => {
+            mapContainer.innerHTML = svgData;
+            
+            // Configurar responsividade
+            const svg = mapContainer.querySelector('svg');
+            if (svg) {
+                svg.setAttribute('width', '100%');
+                svg.setAttribute('height', 'auto');
+                svg.style.maxWidth = '100%';
+                svg.style.height = 'auto';
+            }
+            
+            // Aplicar cores aos estados baseado nos dados
+            dataToRender.forEach(region => {
+                const stateElement = mapContainer.querySelector(`#${region.state}`);
+                if (stateElement) {
+                    // Remover classes de cor anteriores
+                    stateElement.classList.remove('pessimo', 'ruim', 'fraco', 'mediano', 'bom', 'excelente');
+                    
+                    // Adicionar nova classe baseada na porcentagem
+                    const colorClass = getColorClass(region.percentage);
+                    stateElement.classList.add('state', colorClass);
+                    
+                    // Adicionar dados para tooltip
+                    stateElement.setAttribute('data-name', region.state);
+                    stateElement.setAttribute('data-percentage', region.percentage);
+                    stateElement.setAttribute('data-searches', region.searches || 0);
+                    stateElement.setAttribute('data-trend', region.trend || 0);
+                }
+            });
+            
+            setupMapTooltips(mapContainer);
+        })
+        .catch(error => {
+            console.error('Erro ao carregar o mapa SVG melhorado:', error);
+            // Fallback para o mapa original se o melhorado não carregar
+            renderBrazilMapOriginal(dataToRender);
+        });
+}
+
+// Função para obter classe de cor baseada na porcentagem
+function getColorClass(percentage) {
+    if (percentage < 10) return 'pessimo';
+    if (percentage < 25) return 'ruim';
+    if (percentage < 45) return 'fraco';
+    if (percentage < 60) return 'mediano';
+    if (percentage < 80) return 'bom';
+    return 'excelente';
+}
+
+// Configurar tooltips do mapa
+function setupMapTooltips(mapContainer) {
+    const states = mapContainer.querySelectorAll('.state');
+    let tooltip = null;
+    
+    states.forEach(state => {
+        state.addEventListener('mouseenter', function(e) {
+            // Criar tooltip se não existir
+            if (!tooltip) {
+                tooltip = document.createElement('div');
+                tooltip.className = 'map-tooltip';
+                document.body.appendChild(tooltip);
+            }
+            
+            // Obter dados do estado
+            const stateName = this.getAttribute('data-name') || this.id;
+            const percentage = this.getAttribute('data-percentage') || '0';
+            const searches = this.getAttribute('data-searches') || '0';
+            const trend = this.getAttribute('data-trend') || '0';
+            
+            // Atualizar conteúdo do tooltip
+            tooltip.innerHTML = `
+                <div class="state-name">${stateName}</div>
+                <div class="state-data">Interesse: ${percentage}%</div>
+                <div class="state-data">Buscas: ${parseInt(searches).toLocaleString('pt-BR')}</div>
+                <div class="state-data">Tendência: ${trend > 0 ? '+' : ''}${trend}%</div>
+            `;
+            
+            // Mostrar tooltip
+            tooltip.style.display = 'block';
+            
+            // Destacar estado
+            this.style.strokeWidth = '3';
+            this.style.filter = 'brightness(1.1)';
+        });
+        
+        state.addEventListener('mousemove', function(e) {
+            if (tooltip) {
+                tooltip.style.left = (e.pageX + 10) + 'px';
+                tooltip.style.top = (e.pageY - 10) + 'px';
+            }
+        });
+        
+        state.addEventListener('mouseleave', function() {
+            if (tooltip) {
+                tooltip.style.display = 'none';
+            }
+            
+            // Remover destaque
+            this.style.strokeWidth = '';
+            this.style.filter = '';
+        });
+        
+        // Suporte para touch em dispositivos móveis
+        state.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            this.dispatchEvent(new Event('mouseenter'));
+        });
+        
+        state.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            setTimeout(() => {
+                this.dispatchEvent(new Event('mouseleave'));
+            }, 3000);
+        });
+    });
+}
+
+// Manter função original como fallback
+function renderBrazilMapOriginal(regionsData) {
+    const mapContainer = document.getElementById("brazilMapContainer");
+    if (!mapContainer) return;
+
+    const dataToRender = regionsData;
+
+    // SVG simplificado do mapa do Brasil (versão original)
+    mapContainer.innerHTML = `
+        <svg width="100%" height="100%" viewBox="0 0 500 500">
+            <!-- Exemplo de alguns estados com caminhos simplificados -->
+            <path d="M200,200 L250,200 L250,250 L200,250 Z" id="state-sp" data-state="São Paulo" data-percentage="${dataToRender.find(r => r.state === 'SP')?.percentage || 0}%" fill="#ff6b35" class="state-path"></path>
+            <path d="M250,200 L300,200 L300,250 L250,250 Z" id="state-rj" data-state="Rio de Janeiro" data-percentage="${dataToRender.find(r => r.state === 'RJ')?.percentage || 0}%" fill="#ff8c5a" class="state-path"></path>
+            <path d="M150,150 L200,150 L200,200 L150,200 Z" id="state-mg" data-state="Minas Gerais" data-percentage="${dataToRender.find(r => r.state === 'MG')?.percentage || 0}%" fill="#ffad7f" class="state-path"></path>
+            <path d="M100,250 L150,250 L150,300 L100,300 Z" id="state-rs" data-state="Rio Grande do Sul" data-percentage="${dataToRender.find(r => r.state === 'RS')?.percentage || 0}%" fill="#ffce9f" class="state-path"></path>
+            <path d="M150,250 L200,250 L200,300 L150,300 Z" id="state-pr" data-state="Paraná" data-percentage="${dataToRender.find(r => r.state === 'PR')?.percentage || 0}%" fill="#ffefbf" class="state-path"></path>
+            <path d="M300,100 L350,100 L350,150 L300,150 Z" id="state-ba" data-state="Bahia" data-percentage="${dataToRender.find(r => r.state === 'BA')?.percentage || 0}%" fill="#ff6b35" class="state-path"></path>
+            <path d="M350,100 L400,100 L400,150 L350,150 Z" id="state-pe" data-state="Pernambuco" data-percentage="${dataToRender.find(r => r.state === 'PE')?.percentage || 0}%" fill="#ff8c5a" class="state-path"></path>
+            <path d="M400,100 L450,100 L450,150 L400,150 Z" id="state-ce" data-state="Ceará" data-percentage="${dataToRender.find(r => r.state === 'CE')?.percentage || 0}%" fill="#ffad7f" class="state-path"></path>
+            <path d="M100,50 L150,50 L150,100 L100,100 Z" id="state-am" data-state="Amazonas" data-percentage="${dataToRender.find(r => r.state === 'AM')?.percentage || 0}%" fill="#ffce9f" class="state-path"></path>
+            <path d="M250,150 L300,150 L300,200 L250,200 Z" id="state-df" data-state="Distrito Federal" data-percentage="${dataToRender.find(r => r.state === 'DF')?.percentage || 0}%" fill="#ffefbf" class="state-path"></path>
+        </svg>
+        <div id="mapTooltip" class="map-tooltip"></div>
+    `;
+
+    const statePaths = mapContainer.querySelectorAll(".state-path");
+    const tooltip = document.getElementById("mapTooltip");
+
+    statePaths.forEach(path => {
+        path.addEventListener("mouseenter", (e) => {
+            const state = e.target.getAttribute("data-state");
+            const percentage = e.target.getAttribute("data-percentage");
+            tooltip.innerHTML = `<strong>${state}</strong><br>Interesse: ${percentage}`;
+            tooltip.style.display = "block";
+        });
+
+        path.addEventListener("mousemove", (e) => {
+            tooltip.style.left = e.pageX + 10 + "px";
+            tooltip.style.top = e.pageY - 10 + "px";
+        });
+
+        path.addEventListener("mouseleave", () => {
+            tooltip.style.display = "none";
+        });
+    });
+}
+
+// Continuar com as outras funções originais...
+function updateDemographySection(demographicsData) {
+    const demoContainer = document.querySelector('.demographics-chart-container');
+    if (!demoContainer) return;
+
+    demoContainer.innerHTML = `
+        <h2><i class="fas fa-users icon"></i> Demografia & Mercado</h2>
+        <div class="demographics-content">
+            <p>Análise demográfica do público-alvo</p>
+            <canvas id="demographicsChart" width="400" height="200"></canvas>
+        </div>
+    `;
+
+    renderDemographicsChart(demographicsData);
+}
+
+function updateCompetitionSection(competitionData) {
+    const compContainer = document.querySelector('.competition-table-container');
+    if (!compContainer) return;
+
+    compContainer.innerHTML = `
+        <h2><i class="fas fa-balance-scale icon"></i> Concorrência</h2>
+        <div class="competition-content">
+            <p>Análise da concorrência</p>
+            <div id="competitionTable">
+                <table class="competition-table">
+                    <thead>
+                        <tr>
+                            <th>Concorrente</th>
+                            <th>Preço Médio</th>
+                            <th>Avaliação</th>
+                            <th>Volume</th>
+                        </tr>
+                    </thead>
+                    <tbody id="competitionTableBody">
+                        <!-- Dados serão inseridos aqui -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `;
+
+    renderCompetitionTable(competitionData);
+}
+
+function updateSuggestedPriceSection(priceData) {
+    const priceContainer = document.querySelector('.suggested-price-container');
+    if (!priceContainer) return;
+
+    priceContainer.innerHTML = `
+        <h2><i class="fas fa-dollar-sign icon"></i> Preço Sugerido</h2>
+        <div class="price-content">
+            <p>Análise de precificação</p>
+            <div class="price-suggestion">
+                <div class="price-range">
+                    <span class="price-label">Faixa Recomendada:</span>
+                    <span class="price-value">R$ 50,00 - R$ 80,00</span>
+                </div>
+                <div class="price-optimal">
+                    <span class="price-label">Preço Ótimo:</span>
+                    <span class="price-value optimal">R$ 65,00</span>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function updateSalesInsightsSection(salesData) {
+    const salesContainer = document.querySelector('.sales-insights-container');
+    if (!salesContainer) return;
+
+    salesContainer.innerHTML = `
+        <h2><i class="fas fa-chart-bar icon"></i> Insights de Vendas</h2>
+        <div class="sales-content">
+            <p>Análise de potencial de vendas</p>
+            <canvas id="salesChart" width="400" height="200"></canvas>
+        </div>
+    `;
+
+    renderSalesChart(salesData);
+}
+
+function updateInsightsRecommendationsSection(insightsData) {
+    const insightsContainer = document.querySelector('.insights-recommendations-container');
+    if (!insightsContainer) return;
+
+    insightsContainer.innerHTML = `
+        <h2><i class="fas fa-lightbulb icon"></i> Insights e Recomendações</h2>
+        <div class="insights-content">
+            <div class="recommendations-list">
+                <div class="recommendation-item">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Produto com alta demanda na região Sudeste</span>
+                </div>
+                <div class="recommendation-item">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Concorrência moderada - oportunidade de entrada</span>
+                </div>
+                <div class="recommendation-item">
+                    <i class="fas fa-trending-up"></i>
+                    <span>Tendência de crescimento nos próximos 3 meses</span>
+                </div>
+            </div>
+        </div>
+    `;
 }
 
 // Atualizar seção de demografia e mercado
