@@ -65,15 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Função para atualizar a classe 'active' nos links da navegação
-    function updateActiveClass(route) {
-        navLinks.forEach(link => {
-            if (link.getAttribute('data-route') === route) {
-                link.classList.add('active');
-            } else {
-                link.classList.remove('active');
-            }
-        });
-    }
+
 
     // Manipulador de cliques para os links da navegação
     navLinks.forEach(link => {
@@ -2424,4 +2416,28 @@ window.loadPage = function(route) {
     }
     initMarketResearchIfNeeded();
 };
+
+
+
+
+
+
+
+window.loadPage = loadPage;
+
+
+
+
+// Função para atualizar a classe 'active' nos links da navegação (global)
+
+
+
+
+
+
+
+// Função para atualizar a classe 'active' nos links da navegação (global)
+
+
+window.updateActiveClass = updateActiveClass;
 
