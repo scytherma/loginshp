@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const navLinks = document.querySelectorAll('.nav__item');
 
     // Função para carregar o conteúdo da página
-    window.loadPage = function loadPage(route) {
+    function loadPage(route) {
         let pageContent = '';
 
         switch (route) {
@@ -23,9 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
             case 'pesquisa':
                 pageContent = getPesquisaContentWithMapContent();
-                setTimeout(() => {
-                    initMarketResearch();
-                }, 0);
+
                 break;
             case 'dre':
                 pageContent = getDreContent();
@@ -67,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Função para atualizar a classe 'active' nos links da navegação
-    window.updateActiveClass = function updateActiveClass(route) {
+    function updateActiveClass(route) {
         navLinks.forEach(link => {
             if (link.getAttribute('data-route') === route) {
                 link.classList.add('active');
@@ -2406,4 +2404,24 @@ function showError(message) {
         errorDiv.remove();
     }, 5000);
 }
+
+
+
+
+// Função para inicializar a pesquisa de mercado
+function initMarketResearchIfNeeded() {
+    const route = getCurrentRoute();
+    if (route === 'pesquisa') {
+        initMarketResearch();
+    }
+}
+
+// Sobrescrever a função loadPage para incluir a inicialização da pesquisa de mercado
+const originalLoadPage = window.loadPage;
+window.loadPage = function(route) {
+    if (originalLoadPage) {
+        originalLoadPage(route);
+    }
+    initMarketResearchIfNeeded();
+};
 
