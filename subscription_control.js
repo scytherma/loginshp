@@ -92,7 +92,7 @@ function enableAllFeatures() {
         item.onclick = () => {
             const route = item.getAttribute("data-route");
             if (route) {
-                window.loadPage(route);
+                loadPage(route);
                 window.updateActiveClass(route);
             }
         };
