@@ -1,3 +1,17 @@
+// Função para atualizar a classe 'active' nos links da navegação
+function updateActiveClass(route) {
+    const navLinks = document.querySelectorAll('.nav__item');
+    navLinks.forEach(link => {
+        if (link.getAttribute('data-route') === route) {
+            link.classList.add('active');
+        } else {
+            link.classList.remove('active');
+        }
+    });
+}
+
+window.updateActiveClass = updateActiveClass;
+
 // spa.js - Sistema de Single Page Application
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -65,7 +79,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Função para atualizar a classe 'active' nos links da navegação
+function updateActiveClass(route) {
+    const navLinks = document.querySelectorAll('.nav__item');
+    navLinks.forEach(link => {
+        if (link.getAttribute('data-route') === route) {
+            link.classList.add('active');
+        } else {
+            link.classList.remove('active');
+        }
+    });
+}
 
+window.updateActiveClass = updateActiveClass;
 
     // Manipulador de cliques para os links da navegação
     navLinks.forEach(link => {
