@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'pesquisa':
                 pageContent = getPesquisaContent();
                 setTimeout(() => {
-                    initMarketResearch();
+                    initEnhancedMarketResearch();
                 }, 0);
                 break;
             case 'dre':
@@ -742,28 +742,380 @@ function getPesquisaContent() {
         <div class="market-research-page">
             <!-- Header da Pesquisa de Mercado -->
             <div class="market-research-header">
-                <i class="fas fa-search icon"></i>
-                <h1>Pesquisa de Produto</h1>
+                <div class="header-content">
+                    <div class="header-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <div class="header-text">
+                        <h1>Pesquisa de Mercado Inteligente</h1>
+                        <p>Análise completa com IA, tendências e dados de mercado</p>
+                    </div>
+                </div>
+                <div class="header-stats">
+                    <div class="stat-item">
+                        <span class="stat-number">5+</span>
+                        <span class="stat-label">Fontes de Dados</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">AI</span>
+                        <span class="stat-label">Insights Inteligentes</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">Real-time</span>
+                        <span class="stat-label">Dados Atualizados</span>
+                    </div>
+                </div>
             </div>
 
-            <!-- Container de Pesquisa -->
+            <!-- Container de Pesquisa Melhorado -->
             <div class="market-search-container">
                 <div class="search-form">
                     <div class="search-input-group">
                         <div class="search-input-wrapper">
-                            <input type="text" id="marketSearchInput" placeholder="Nome do Produto">
-                            <i class="fas fa-search search-input-icon"></i>
-                            <button id="clearSearchButton" title="Limpar">&times;</button>
+                            <div class="search-input-icon">
+                                <i class="fas fa-search"></i>
+                            </div>
+                            <input 
+                                type="text" 
+                                id="marketSearchInput" 
+                                placeholder="Digite o nome do produto (ex: smartphone, tênis, fone de ouvido...)"
+                                maxlength="100"
+                                autocomplete="off"
+                            >
+                            <button id="clearSearchButton" type="button" title="Limpar pesquisa">
+                                <i class="fas fa-times"></i>
+                            </button>
                         </div>
                         <div id="searchInputError" class="search-input-error"></div>
+                        <div class="search-suggestions" id="searchSuggestions">
+                            <div class="suggestions-header">Sugestões populares:</div>
+                            <div class="suggestions-list">
+                                <button class="suggestion-item" data-query="smartphone">📱 Smartphone</button>
+                                <button class="suggestion-item" data-query="tênis esportivo">👟 Tênis Esportivo</button>
+                                <button class="suggestion-item" data-query="fone bluetooth">🎧 Fone Bluetooth</button>
+                                <button class="suggestion-item" data-query="notebook">💻 Notebook</button>
+                                <button class="suggestion-item" data-query="smartwatch">⌚ Smartwatch</button>
+                            </div>
+                        </div>
                     </div>
                     <div class="search-button-group">
-                        <button id="marketSearchButton">Pesquisar</button>
+                        <button id="marketSearchButton" type="button" class="search-btn">
+                            <i class="fas fa-search"></i>
+                            <span>Analisar Produto</span>
+                        </button>
                     </div>
                 </div>
-                <div id="searchLoadingIndicator">
-                    <div class="loading-spinner"></div>
-                    <span>Analisando... Por favor, aguarde.</span>
+                
+                <!-- Indicador de Loading Melhorado -->
+                <div id="searchLoadingIndicator" class="loading-container">
+                    <div class="loading-progress-container">
+                        <div class="loading-header">
+                            <div class="loading-icon">
+                                <i class="fas fa-brain"></i>
+                            </div>
+                            <h2>Analisando seu produto...</h2>
+                            <p>Coletando dados de múltiplas fontes para fornecer insights precisos</p>
+                        </div>
+                        
+                        <div class="loading-steps">
+                            <div class="loading-step active" id="step-trends">
+                                <div class="step-icon">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <div class="step-content">
+                                    <h3>Analisando Tendências</h3>
+                                    <p>Coletando dados do Google Trends...</p>
+                                </div>
+                                <div class="step-spinner">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                </div>
+                            </div>
+                            
+                            <div class="loading-step" id="step-demographics">
+                                <div class="step-icon">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="step-content">
+                                    <h3>Dados Demográficos</h3>
+                                    <p>Consultando base de dados do IBGE...</p>
+                                </div>
+                                <div class="step-spinner">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                </div>
+                            </div>
+                            
+                            <div class="loading-step" id="step-competition">
+                                <div class="step-icon">
+                                    <i class="fas fa-balance-scale"></i>
+                                </div>
+                                <div class="step-content">
+                                    <h3>Análise de Concorrência</h3>
+                                    <p>Pesquisando em marketplaces...</p>
+                                </div>
+                                <div class="step-spinner">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                </div>
+                            </div>
+                            
+                            <div class="loading-step" id="step-ai">
+                                <div class="step-icon">
+                                    <i class="fas fa-brain"></i>
+                                </div>
+                                <div class="step-content">
+                                    <h3>Insights Inteligentes</h3>
+                                    <p>Gerando recomendações com IA...</p>
+                                </div>
+                                <div class="step-spinner">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="loading-progress-bar">
+                            <div class="progress-bar-fill" id="progressBarFill"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Container para os resultados da pesquisa -->
+            <div id="marketResearchResultsContainer" class="market-research-results-container">
+                <!-- Os resultados serão inseridos aqui dinamicamente -->
+            </div>
+
+            <!-- Seção de Histórico Melhorada -->
+            <div class="history-section" id="searchHistorySection">
+                <div class="history-header">
+                    <h2>
+                        <i class="fas fa-history"></i>
+                        Pesquisas Recentes
+                    </h2>
+                    <button class="clear-history-btn" id="clearHistoryBtn" title="Limpar histórico">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+                <div class="history-list" id="searchHistoryList">
+                    <!-- Histórico será inserido dinamicamente -->
+                </div>
+            </div>
+
+            <!-- Seção de Recursos e Dicas -->
+            <div class="resources-section">
+                <div class="resources-header">
+                    <h2>
+                        <i class="fas fa-lightbulb"></i>
+                        Recursos e Dicas
+                    </h2>
+                </div>
+                <div class="resources-grid">
+                    <div class="resource-card">
+                        <div class="resource-icon">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <h3>Análise de Tendências</h3>
+                        <p>Entenda como interpretar os gráficos de interesse ao longo do tempo e sazonalidade.</p>
+                        <button class="resource-btn" onclick="showTrendsGuide()">
+                            <span>Saiba Mais</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="resource-card">
+                        <div class="resource-icon">
+                            <i class="fas fa-target"></i>
+                        </div>
+                        <h3>Estratégias de Preço</h3>
+                        <p>Aprenda a definir preços competitivos baseados na análise de concorrência.</p>
+                        <button class="resource-btn" onclick="showPricingGuide()">
+                            <span>Saiba Mais</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="resource-card">
+                        <div class="resource-icon">
+                            <i class="fas fa-map-marked-alt"></i>
+                        </div>
+                        <h3>Mercado Regional</h3>
+                        <p>Descubra como usar os dados regionais para focar suas estratégias de marketing.</p>
+                        <button class="resource-btn" onclick="showRegionalGuide()">
+                            <span>Saiba Mais</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal para Guias -->
+            <div id="guideModal" class="guide-modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 id="modalTitle">Guia</h3>
+                        <button class="modal-close" onclick="closeGuideModal()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body" id="modalBody">
+                        <!-- Conteúdo do guia será inserido aqui -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Overlay para Modal -->
+            <div id="modalOverlay" class="modal-overlay" onclick="closeGuideModal()"></div>
+        </div>
+
+        <!-- Scripts necessários -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            // Inicializar pesquisa de mercado melhorada quando a página carregar
+            document.addEventListener(\'DOMContentLoaded\', function() {
+                if (typeof initEnhancedMarketResearch === \'function\') {
+                    initEnhancedMarketResearch();
+                }
+                
+                // Configurar sugestões de pesquisa
+                setupSearchSuggestions();
+                
+                // Configurar histórico
+                setupHistoryControls();
+            });
+
+            // Configurar sugestões de pesquisa
+            function setupSearchSuggestions() {
+                const suggestions = document.querySelectorAll(\".suggestion-item\");
+                suggestions.forEach(suggestion => {
+                    suggestion.addEventListener(\'click\', function() {
+                        const query = this.getAttribute(\'data-query\');
+                        const searchInput = document.getElementById(\'marketSearchInput\');
+                        if (searchInput) {
+                            searchInput.value = query;
+                            searchInput.focus();
+                            
+                            // Trigger search automatically
+                            if (typeof handleEnhancedMarketSearch === \'function\') {
+                                handleEnhancedMarketSearch();
+                            }
+                        }
+                    });
+                });
+            }
+
+            // Configurar controles de histórico
+            function setupHistoryControls() {
+                const clearHistoryBtn = document.getElementById(\'clearHistoryBtn\');
+                if (clearHistoryBtn) {
+                    clearHistoryBtn.addEventListener(\'click\', function() {
+                        if (confirm(\'Tem certeza que deseja limpar todo o histórico de pesquisas?\')) {
+                            localStorage.removeItem(\'market_research_history\');
+                            const historySection = document.getElementById(\'searchHistorySection\');
+                            if (historySection) {
+                                historySection.style.display = \'none\';
+                            }
+                        }
+                    });
+                }
+            }
+
+            // Funções para os guias
+            function showTrendsGuide() {
+                showGuideModal(\'Análise de Tendências\', \
+                    <div class="guide-content">
+                        <h4>Como Interpretar o Gráfico de Tendências</h4>
+                        <ul>
+                            <li><strong>Linha Ascendente:</strong> Produto em alta, boa oportunidade</li>
+                            <li><strong>Linha Descendente:</strong> Interesse diminuindo, cuidado</li>
+                            <li><strong>Picos Sazonais:</strong> Identifique épocas de maior demanda</li>
+                            <li><strong>Estabilidade:</strong> Mercado maduro, concorrência estabelecida</li>
+                        </ul>
+                        <h4>Dicas Importantes</h4>
+                        <p>• Observe tendências de pelo menos 6 meses</p>
+                        <p>• Compare com eventos sazonais (Natal, Black Friday)</p>
+                        <p>• Considere fatores externos (economia, moda)</p>
+                    </div>
+                \');
+            }
+
+            function showPricingGuide() {
+                showGuideModal(\'Estratégias de Preço\', \
+                    <div class="guide-content">
+                        <h4>Como Definir o Preço Ideal</h4>
+                        <ul>
+                            <li><strong>Preço Competitivo:</strong> 5-10% abaixo da média</li>
+                            <li><strong>Preço Premium:</strong> 10-20% acima, com diferencial</li>
+                            <li><strong>Preço de Penetração:</strong> Muito baixo para ganhar mercado</li>
+                        </ul>
+                        <h4>Fatores a Considerar</h4>
+                        <p>• Qualidade do produto vs. concorrência</p>
+                        <p>• Margem de lucro desejada</p>
+                        <p>• Poder de compra do público-alvo</p>
+                        <p>• Custos de marketing e logística</p>
+                    </div>
+                \');
+            }
+
+            function showRegionalGuide() {
+                showGuideModal(\'Mercado Regional\', \
+                    <div class="guide-content">
+                        <h4>Como Usar Dados Regionais</h4>
+                        <ul>
+                            <li><strong>Regiões Quentes:</strong> Foque marketing e estoque</li>
+                            <li><strong>Regiões Frias:</strong> Investigue oportunidades</li>
+                            <li><strong>Distribuição:</strong> Priorize centros de distribuição</li>
+                        </ul>
+                        <h4>Estratégias por Região</h4>
+                        <p>• <strong>Sudeste:</strong> Maior poder de compra, preços premium</p>
+                        <p>• <strong>Nordeste:</strong> Preços competitivos, produtos populares</p>
+                        <p>• <strong>Sul:</strong> Qualidade valorizada, produtos duráveis</p>
+                    </div>
+                \');
+            }
+
+            function showGuideModal(title, content) {
+                const modal = document.getElementById(\'guideModal\');
+                const overlay = document.getElementById(\'modalOverlay\');
+                const modalTitle = document.getElementById(\'modalTitle\');
+                const modalBody = document.getElementById(\'modalBody\');
+                
+                if (modal && overlay && modalTitle && modalBody) {
+                    modalTitle.textContent = title;
+                    modalBody.innerHTML = content;
+                    
+                    modal.style.display = \'block\';
+                    overlay.style.display = \'block\';
+                    
+                    // Animar entrada
+                    setTimeout(() => {
+                        modal.classList.add(\'active\');
+                        overlay.classList.add(\'active\');
+                    }, 10);
+                }
+            }
+
+            function closeGuideModal() {
+                const modal = document.getElementById(\'guideModal\');
+                const overlay = document.getElementById(\'modalOverlay\');
+                
+                if (modal && overlay) {
+                    modal.classList.remove(\'active\');
+                    overlay.classList.remove(\'active\');
+                    
+                    setTimeout(() => {
+                        modal.style.display = \'none\';
+                        overlay.style.display = \'none\';
+                    }, 300);
+                }
+            }
+
+            // Fechar modal com ESC
+            document.addEventListener(\'keydown\', function(e) {
+                if (e.key === \'Escape\') {
+                    closeGuideModal();
+                }
+            });
+        </script>
+    `;
+}r, aguarde.</span>
                 </div>
             </div>
 
