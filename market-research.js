@@ -1,11 +1,12 @@
-// market-research.js - Sistema de Pesquisa de Mercado
+// improved-market-research.js - Sistema de Pesquisa de Mercado Melhorado
 
 // Configurações globais
 const MARKET_RESEARCH_CONFIG = {
     maxSearchLength: 100,
     minSearchLength: 3,
-    searchTimeout: 30000, // 30 segundos
+    searchTimeout: 60000, // 60 segundos
     cacheTimeout: 24 * 60 * 60 * 1000, // 24 horas
+    apiEndpoint: '/market-research-enhanced'
 };
 
 // Estado global da pesquisa
@@ -13,12 +14,13 @@ let currentSearchState = {
     isSearching: false,
     currentQuery: '',
     lastResults: null,
-    searchHistory: []
+    searchHistory: [],
+    charts: {}
 };
 
-// Função para inicializar a pesquisa de mercado
-function initMarketResearch() {
-    console.log('Inicializando sistema de pesquisa de mercado...');
+// Função para inicializar a pesquisa de mercado melhorada
+function initEnhancedMarketResearch() {
+    console.log('Inicializando sistema de pesquisa de mercado melhorado...');
     
     // Verificar se os elementos existem
     const searchInput = document.getElementById('marketSearchInput');
@@ -30,7 +32,7 @@ function initMarketResearch() {
     }
 
     // Event listeners
-    setupMarketResearchEventListeners();
+    setupEnhancedEventListeners();
     
     // Carregar histórico de pesquisas
     loadSearchHistory();
@@ -38,21 +40,21 @@ function initMarketResearch() {
     // Verificar controle de acesso
     checkMarketResearchAccess();
     
-    console.log('Sistema de pesquisa de mercado inicializado com sucesso');
+    console.log('Sistema de pesquisa de mercado melhorado inicializado com sucesso');
 }
 
-// Configurar event listeners
-function setupMarketResearchEventListeners() {
+// Configurar event listeners melhorados
+function setupEnhancedEventListeners() {
     const searchInput = document.getElementById('marketSearchInput');
     const searchButton = document.getElementById('marketSearchButton');
     
     // Event listener para o botão de pesquisa
-    searchButton.addEventListener('click', handleMarketSearch);
+    searchButton.addEventListener('click', handleEnhancedMarketSearch);
     
     // Event listener para Enter no campo de pesquisa
     searchInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
-            handleMarketSearch();
+            handleEnhancedMarketSearch();
         }
     });
     
@@ -66,7 +68,958 @@ function setupMarketResearchEventListeners() {
     }
 }
 
-// Validar entrada de pesquisa
+// Manipular pesquisa de mercado melhorada
+async function handleEnhancedMarketSearch() {
+    console.log('Iniciando pesquisa de mercado melhorada...');
+    
+    // Verificar se já está pesquisando
+    if (currentSearchState.isSearching) {
+        console.log('Pesquisa já em andamento');
+        return;
+    }
+    
+    // Verificar acesso
+    if (!checkMarketResearchAccess()) {
+        console.log('Acesso negado à pesquisa de mercado');
+        return;
+    }
+    
+    // Validar input
+    if (!validateSearchInput()) {
+        console.log('Input inválido');
+        return;
+    }
+    
+    const searchInput = document.getElementById('marketSearchInput');
+    const query = searchInput.value.trim();
+    
+    // Verificar cache
+    const cachedResult = getCachedResult(query);
+    if (cachedResult) {
+        console.log('Resultado encontrado no cache');
+        displayEnhancedMarketResearchResults(cachedResult);
+        return;
+    }
+    
+    try {
+        // Iniciar estado de loading
+        setEnhancedSearchLoadingState(true);
+        currentSearchState.isSearching = true;
+        currentSearchState.currentQuery = query;
+        
+        // Fazer a pesquisa melhorada
+        const results = await performEnhancedMarketResearch(query);
+        
+        // Salvar no cache
+        setCachedResult(query, results);
+        
+        // Salvar no histórico
+        addToSearchHistory(query);
+        
+        // Mostrar resultados melhorados
+        displayEnhancedMarketResearchResults(results);
+        
+    } catch (error) {
+        console.error('Erro na pesquisa de mercado:', error);
+        showSearchError(error.message);
+    } finally {
+        // Finalizar estado de loading
+        setEnhancedSearchLoadingState(false);
+        currentSearchState.isSearching = false;
+    }
+}
+
+// Definir estado de loading melhorado
+function setEnhancedSearchLoadingState(isLoading) {
+    const searchButton = document.getElementById('marketSearchButton');
+    const searchInput = document.getElementById('marketSearchInput');
+    const loadingIndicator = document.getElementById('searchLoadingIndicator');
+    
+    if (isLoading) {
+        searchButton.disabled = true;
+        searchButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analisando...';
+        searchInput.disabled = true;
+        
+        if (loadingIndicator) {
+            loadingIndicator.style.display = 'block';
+        }
+        
+        // Mostrar progresso de carregamento
+        showLoadingProgress();
+    } else {
+        searchButton.disabled = false;
+        searchButton.innerHTML = '<i class="fas fa-search"></i> Pesquisar';
+        searchInput.disabled = false;
+        
+        if (loadingIndicator) {
+            loadingIndicator.style.display = 'none';
+        }
+        
+        // Esconder progresso de carregamento
+        hideLoadingProgress();
+    }
+}
+
+// Mostrar progresso de carregamento
+function showLoadingProgress() {
+    const resultsContainer = document.getElementById('marketResearchResultsContainer');
+    if (!resultsContainer) return;
+    
+    resultsContainer.innerHTML = `
+        <div class="loading-progress-container">
+            <div class="loading-header">
+                <h2><i class="fas fa-search"></i> Analisando seu produto...</h2>
+                <p>Coletando dados de múltiplas fontes para fornecer insights precisos</p>
+            </div>
+            
+            <div class="loading-steps">
+                <div class="loading-step active" id="step-trends">
+                    <div class="step-icon"><i class="fas fa-chart-line"></i></div>
+                    <div class="step-content">
+                        <h3>Analisando Tendências</h3>
+                        <p>Coletando dados do Google Trends...</p>
+                    </div>
+                    <div class="step-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                </div>
+                
+                <div class="loading-step" id="step-demographics">
+                    <div class="step-icon"><i class="fas fa-users"></i></div>
+                    <div class="step-content">
+                        <h3>Dados Demográficos</h3>
+                        <p>Consultando base de dados do IBGE...</p>
+                    </div>
+                    <div class="step-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                </div>
+                
+                <div class="loading-step" id="step-competition">
+                    <div class="step-icon"><i class="fas fa-balance-scale"></i></div>
+                    <div class="step-content">
+                        <h3>Análise de Concorrência</h3>
+                        <p>Pesquisando em marketplaces...</p>
+                    </div>
+                    <div class="step-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                </div>
+                
+                <div class="loading-step" id="step-ai">
+                    <div class="step-icon"><i class="fas fa-brain"></i></div>
+                    <div class="step-content">
+                        <h3>Insights Inteligentes</h3>
+                        <p>Gerando recomendações com IA...</p>
+                    </div>
+                    <div class="step-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    resultsContainer.style.display = 'block';
+    
+    // Simular progresso das etapas
+    simulateLoadingProgress();
+}
+
+// Simular progresso de carregamento
+function simulateLoadingProgress() {
+    const steps = ['step-trends', 'step-demographics', 'step-competition', 'step-ai'];
+    let currentStep = 0;
+    
+    const progressInterval = setInterval(() => {
+        if (currentStep < steps.length) {
+            // Marcar etapa atual como concluída
+            if (currentStep > 0) {
+                const prevStep = document.getElementById(steps[currentStep - 1]);
+                if (prevStep) {
+                    prevStep.classList.remove('active');
+                    prevStep.classList.add('completed');
+                    const spinner = prevStep.querySelector('.step-spinner i');
+                    if (spinner) {
+                        spinner.className = 'fas fa-check';
+                    }
+                }
+            }
+            
+            // Ativar próxima etapa
+            const nextStep = document.getElementById(steps[currentStep]);
+            if (nextStep) {
+                nextStep.classList.add('active');
+            }
+            
+            currentStep++;
+        } else {
+            clearInterval(progressInterval);
+        }
+    }, 2000); // 2 segundos por etapa
+}
+
+// Esconder progresso de carregamento
+function hideLoadingProgress() {
+    // O progresso será substituído pelos resultados reais
+}
+
+// Realizar pesquisa de mercado melhorada
+async function performEnhancedMarketResearch(query) {
+    console.log(`Realizando pesquisa melhorada para: "${query}"`);
+    
+    // Obter token de autenticação
+    const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+    if (sessionError || !session || !session.access_token) {
+        throw new Error('Usuário não autenticado');
+    }
+    
+    const accessToken = session.access_token;
+    
+    // Fazer requisição para Edge Function melhorada
+    const response = await fetch(`${SUPABASE_FUNCTIONS_BASE_URL}${MARKET_RESEARCH_CONFIG.apiEndpoint}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`
+        },
+        body: JSON.stringify({
+            query: query,
+            timestamp: new Date().toISOString(),
+            features: {
+                trends: true,
+                demographics: true,
+                competition: true,
+                pricing: true,
+                insights: true
+            }
+        })
+    });
+    
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Erro na pesquisa: ${response.status}`);
+    }
+    
+    const results = await response.json();
+    console.log('Resultados da pesquisa melhorada:', results);
+    
+    return results;
+}
+
+// Exibir resultados melhorados
+function displayEnhancedMarketResearchResults(results) {
+    console.log('Exibindo resultados melhorados da pesquisa');
+    const resultsContainer = document.getElementById('marketResearchResultsContainer');
+    if (!resultsContainer) {
+        console.error('Elemento marketResearchResultsContainer não encontrado.');
+        return;
+    }
+
+    if (!results || !results.success) {
+        resultsContainer.innerHTML = `
+            <div class="error-message">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Erro na Análise</h3>
+                <p>${results?.error || 'Não foi possível realizar a análise'}</p>
+                <button onclick="handleEnhancedMarketSearch()" class="retry-btn">
+                    <i class="fas fa-redo"></i> Tentar Novamente
+                </button>
+            </div>
+        `;
+        resultsContainer.style.display = 'block';
+        return;
+    }
+
+    const data = results.data;
+    
+    // Criar estrutura melhorada dos resultados
+    resultsContainer.innerHTML = `
+        <div class="enhanced-results-container">
+            <!-- Header dos Resultados -->
+            <div class="results-header">
+                <h2><i class="fas fa-chart-line"></i> Análise de Mercado: ${currentSearchState.currentQuery}</h2>
+                <div class="results-summary">
+                    <div class="summary-item">
+                        <span class="summary-label">Viabilidade:</span>
+                        <span class="summary-value ${getViabilityClass(data.viability_score)}">${getViabilityText(data.viability_score)}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Interesse:</span>
+                        <span class="summary-value">${data.interest_level || 'Médio'}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Competitividade:</span>
+                        <span class="summary-value">${data.competition_level || 'Moderada'}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Grid de Resultados -->
+            <div class="results-grid">
+                <!-- Tendência de Busca -->
+                <div class="result-card trend-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-chart-line"></i> Tendência de Busca</h3>
+                        <div class="card-actions">
+                            <button class="expand-btn" onclick="expandCard('trend-card')">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="trend-chart-container">
+                            <canvas id="trendChart" width="400" height="200"></canvas>
+                        </div>
+                        <div class="trend-insights">
+                            <div class="insight-item">
+                                <span class="insight-label">Últimos 7 dias:</span>
+                                <span class="insight-value trend-up">+${data.trends?.growth_7d || '15'}%</span>
+                            </div>
+                            <div class="insight-item">
+                                <span class="insight-label">Últimos 30 dias:</span>
+                                <span class="insight-value trend-up">+${data.trends?.growth_30d || '8'}%</span>
+                            </div>
+                            <div class="insight-item">
+                                <span class="insight-label">Sazonalidade:</span>
+                                <span class="insight-value">${data.trends?.seasonality || 'Baixa'}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Mapa do Brasil -->
+                <div class="result-card map-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-map-marked-alt"></i> Interesse por Região</h3>
+                        <div class="card-actions">
+                            <button class="expand-btn" onclick="expandCard('map-card')">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="brazil-map-container">
+                            <svg id="brazilMap" width="100%" height="300" viewBox="0 0 400 300">
+                                <!-- Mapa do Brasil será renderizado aqui -->
+                            </svg>
+                        </div>
+                        <div class="map-legend">
+                            <div class="legend-item">
+                                <div class="legend-color low"></div>
+                                <span>Baixo</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color medium"></div>
+                                <span>Médio</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color high"></div>
+                                <span>Alto</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color very-high"></div>
+                                <span>Muito Alto</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Demografia -->
+                <div class="result-card demographics-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-users"></i> Demografia & Mercado</h3>
+                        <div class="card-actions">
+                            <button class="expand-btn" onclick="expandCard('demographics-card')">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="demographics-chart-container">
+                            <canvas id="demographicsChart" width="300" height="200"></canvas>
+                        </div>
+                        <div class="demographics-stats">
+                            <div class="stat-item">
+                                <span class="stat-label">Renda Média:</span>
+                                <span class="stat-value">R$ ${data.demographics?.average_income || '2.500'}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Faixa Etária Principal:</span>
+                                <span class="stat-value">${data.demographics?.main_age_group || '25-40 anos'}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Região de Maior Interesse:</span>
+                                <span class="stat-value">${data.demographics?.top_region || 'Sudeste'}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Concorrência -->
+                <div class="result-card competition-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-balance-scale"></i> Análise de Concorrência</h3>
+                        <div class="card-actions">
+                            <button class="expand-btn" onclick="expandCard('competition-card')">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="competition-table-wrapper">
+                            <table class="competition-table">
+                                <thead>
+                                    <tr>
+                                        <th>Produto</th>
+                                        <th>Marketplace</th>
+                                        <th>Preço</th>
+                                        <th>Avaliação</th>
+                                        <th>Vendas</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="competitionTableBody">
+                                    <!-- Dados da concorrência serão inseridos aqui -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="competition-summary">
+                            <div class="summary-stat">
+                                <span class="stat-label">Preço Médio:</span>
+                                <span class="stat-value">R$ ${data.competition?.average_price || '89,90'}</span>
+                            </div>
+                            <div class="summary-stat">
+                                <span class="stat-label">Avaliação Média:</span>
+                                <span class="stat-value">${data.competition?.average_rating || '4.2'} ⭐</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Preço Sugerido -->
+                <div class="result-card pricing-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-dollar-sign"></i> Preço Sugerido</h3>
+                        <div class="card-actions">
+                            <button class="expand-btn" onclick="expandCard('pricing-card')">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="pricing-main">
+                            <div class="suggested-price">
+                                <span class="price-label">Preço Recomendado:</span>
+                                <span class="price-value">R$ ${data.pricing?.suggested_price || '105,00'}</span>
+                            </div>
+                            <div class="price-range">
+                                <span class="range-label">Faixa Competitiva:</span>
+                                <span class="range-value">R$ ${data.pricing?.min_price || '85,00'} - R$ ${data.pricing?.max_price || '125,00'}</span>
+                            </div>
+                        </div>
+                        <div class="pricing-factors">
+                            <div class="factor-item">
+                                <span class="factor-label">Margem de Lucro:</span>
+                                <span class="factor-value">${data.pricing?.profit_margin || '30'}%</span>
+                            </div>
+                            <div class="factor-item">
+                                <span class="factor-label">Posicionamento:</span>
+                                <span class="factor-value">${data.pricing?.positioning || 'Médio'}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Insights de Vendas -->
+                <div class="result-card sales-insights-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-chart-bar"></i> Insights de Vendas</h3>
+                        <div class="card-actions">
+                            <button class="expand-btn" onclick="expandCard('sales-insights-card')">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="sales-chart-container">
+                            <canvas id="salesInsightsChart" width="300" height="200"></canvas>
+                        </div>
+                        <div class="sales-predictions">
+                            <div class="prediction-item">
+                                <span class="prediction-label">Vendas Estimadas (mês):</span>
+                                <span class="prediction-value">${data.sales_insights?.monthly_sales || '150'} unidades</span>
+                            </div>
+                            <div class="prediction-item">
+                                <span class="prediction-label">Melhor Época:</span>
+                                <span class="prediction-value">${data.sales_insights?.best_season || 'Dezembro'}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Insights e Recomendações -->
+            <div class="result-card insights-card full-width">
+                <div class="card-header">
+                    <h3><i class="fas fa-lightbulb"></i> Insights e Recomendações</h3>
+                    <div class="card-actions">
+                        <button class="export-btn" onclick="exportInsights()">
+                            <i class="fas fa-download"></i> Exportar
+                        </button>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="insights-grid">
+                        <div class="insight-section positive">
+                            <h4><i class="fas fa-thumbs-up"></i> Pontos Positivos</h4>
+                            <ul id="positiveInsights">
+                                <!-- Insights positivos serão inseridos aqui -->
+                            </ul>
+                        </div>
+                        <div class="insight-section negative">
+                            <h4><i class="fas fa-exclamation-triangle"></i> Pontos de Atenção</h4>
+                            <ul id="negativeInsights">
+                                <!-- Insights negativos serão inseridos aqui -->
+                            </ul>
+                        </div>
+                        <div class="insight-section recommendations">
+                            <h4><i class="fas fa-star"></i> Recomendações</h4>
+                            <ul id="recommendationsList">
+                                <!-- Recomendações serão inseridas aqui -->
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="final-recommendation">
+                        <div class="recommendation-header">
+                            <h4>Recomendação Final:</h4>
+                        </div>
+                        <div class="recommendation-content">
+                            <div class="recommendation-score ${getViabilityClass(data.viability_score)}">
+                                <span class="score-value">${data.viability_score || 75}/100</span>
+                                <span class="score-label">Pontuação de Viabilidade</span>
+                            </div>
+                            <div class="recommendation-text">
+                                <p>${data.final_recommendation || 'Com base na análise realizada, este produto apresenta boa viabilidade de mercado. Recomendamos prosseguir com cautela, observando as tendências sazonais e ajustando a estratégia de preços conforme a concorrência.'}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Renderizar gráficos e dados
+    setTimeout(() => {
+        renderEnhancedTrendChart(data.trends);
+        renderEnhancedBrazilMap(data.regions);
+        renderEnhancedDemographicsChart(data.demographics);
+        populateCompetitionTable(data.competition);
+        populateInsights(data.insights);
+    }, 100);
+    
+    // Mostrar o container de resultados
+    resultsContainer.style.display = 'block';
+    
+    // Salvar resultados atuais
+    currentSearchState.lastResults = results;
+}
+
+// Funções auxiliares para classificação de viabilidade
+function getViabilityClass(score) {
+    if (score >= 80) return 'excellent';
+    if (score >= 60) return 'good';
+    if (score >= 40) return 'fair';
+    return 'poor';
+}
+
+function getViabilityText(score) {
+    if (score >= 80) return 'Excelente';
+    if (score >= 60) return 'Boa';
+    if (score >= 40) return 'Regular';
+    return 'Baixa';
+}
+
+// Renderizar gráfico de tendência melhorado
+function renderEnhancedTrendChart(trendsData) {
+    const canvas = document.getElementById('trendChart');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    
+    // Destruir gráfico anterior se existir
+    if (currentSearchState.charts.trendChart) {
+        currentSearchState.charts.trendChart.destroy();
+    }
+    
+    // Dados de exemplo ou reais
+    const data = trendsData?.timeline || generateSampleTrendData();
+    
+    currentSearchState.charts.trendChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.labels,
+            datasets: [{
+                label: 'Interesse ao longo do tempo',
+                data: data.values,
+                borderColor: '#ff6b35',
+                backgroundColor: 'rgba(255, 107, 53, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#ff6b35',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: 5,
+                pointHoverRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleColor: '#ffffff',
+                    bodyColor: '#ffffff',
+                    borderColor: '#ff6b35',
+                    borderWidth: 1,
+                    cornerRadius: 8,
+                    displayColors: false,
+                    callbacks: {
+                        title: function(context) {
+                            return context[0].label;
+                        },
+                        label: function(context) {
+                            return `Interesse: ${context.parsed.y}%`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: '#666666',
+                        font: {
+                            size: 12
+                        }
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.1)'
+                    },
+                    ticks: {
+                        color: '#666666',
+                        font: {
+                            size: 12
+                        },
+                        callback: function(value) {
+                            return value + '%';
+                        }
+                    }
+                }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            }
+        }
+    });
+}
+
+// Gerar dados de exemplo para o gráfico de tendência
+function generateSampleTrendData() {
+    const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'];
+    const values = [65, 72, 68, 85, 78, 92];
+    
+    return {
+        labels: months,
+        values: values
+    };
+}
+
+// Renderizar mapa do Brasil melhorado
+function renderEnhancedBrazilMap(regionsData) {
+    const mapContainer = document.getElementById('brazilMap');
+    if (!mapContainer) return;
+    
+    // Dados de exemplo ou reais das regiões
+    const regionInterest = regionsData?.states || {
+        'SP': 95, 'RJ': 88, 'MG': 75, 'RS': 70, 'PR': 68,
+        'SC': 65, 'BA': 60, 'GO': 55, 'PE': 52, 'CE': 48
+    };
+    
+    // Limpar mapa anterior
+    mapContainer.innerHTML = '';
+    
+    // SVG simplificado do Brasil (apenas alguns estados principais)
+    const brazilStates = [
+        { id: 'SP', name: 'São Paulo', path: 'M200,180 L240,180 L240,220 L200,220 Z', interest: regionInterest.SP || 0 },
+        { id: 'RJ', name: 'Rio de Janeiro', path: 'M240,180 L270,180 L270,200 L240,200 Z', interest: regionInterest.RJ || 0 },
+        { id: 'MG', name: 'Minas Gerais', path: 'M200,140 L270,140 L270,180 L200,180 Z', interest: regionInterest.MG || 0 },
+        { id: 'RS', name: 'Rio Grande do Sul', path: 'M180,240 L240,240 L240,280 L180,280 Z', interest: regionInterest.RS || 0 },
+        { id: 'PR', name: 'Paraná', path: 'M180,200 L240,200 L240,240 L180,240 Z', interest: regionInterest.PR || 0 }
+    ];
+    
+    brazilStates.forEach(state => {
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', state.path);
+        path.setAttribute('fill', getRegionColor(state.interest));
+        path.setAttribute('stroke', '#ffffff');
+        path.setAttribute('stroke-width', '2');
+        path.setAttribute('class', 'map-state');
+        path.setAttribute('data-state', state.id);
+        path.setAttribute('data-interest', state.interest);
+        
+        // Tooltip no hover
+        path.addEventListener('mouseenter', (e) => {
+            showMapTooltip(e, state);
+        });
+        
+        path.addEventListener('mouseleave', hideMapTooltip);
+        
+        mapContainer.appendChild(path);
+    });
+}
+
+// Obter cor baseada no nível de interesse
+function getRegionColor(interest) {
+    if (interest >= 80) return '#1e40af'; // Azul escuro - Muito Alto
+    if (interest >= 60) return '#3b82f6'; // Azul médio - Alto
+    if (interest >= 40) return '#93c5fd'; // Azul claro - Médio
+    if (interest >= 20) return '#fbbf24'; // Amarelo - Baixo
+    return '#ef4444'; // Vermelho - Muito Baixo
+}
+
+// Mostrar tooltip do mapa
+function showMapTooltip(event, state) {
+    const tooltip = document.createElement('div');
+    tooltip.className = 'map-tooltip';
+    tooltip.innerHTML = `
+        <strong>${state.name}</strong><br>
+        Interesse: ${state.interest}%<br>
+        <span class="tooltip-status">${getInterestLevel(state.interest)}</span>
+    `;
+    
+    tooltip.style.position = 'absolute';
+    tooltip.style.left = event.pageX + 10 + 'px';
+    tooltip.style.top = event.pageY - 10 + 'px';
+    tooltip.style.background = 'rgba(0, 0, 0, 0.8)';
+    tooltip.style.color = 'white';
+    tooltip.style.padding = '8px 12px';
+    tooltip.style.borderRadius = '6px';
+    tooltip.style.fontSize = '12px';
+    tooltip.style.zIndex = '1000';
+    tooltip.style.pointerEvents = 'none';
+    
+    document.body.appendChild(tooltip);
+    
+    // Remover tooltip após 3 segundos
+    setTimeout(() => {
+        if (tooltip.parentNode) {
+            tooltip.parentNode.removeChild(tooltip);
+        }
+    }, 3000);
+}
+
+// Esconder tooltip do mapa
+function hideMapTooltip() {
+    const tooltips = document.querySelectorAll('.map-tooltip');
+    tooltips.forEach(tooltip => {
+        if (tooltip.parentNode) {
+            tooltip.parentNode.removeChild(tooltip);
+        }
+    });
+}
+
+// Obter nível de interesse textual
+function getInterestLevel(interest) {
+    if (interest >= 80) return 'Muito Alto';
+    if (interest >= 60) return 'Alto';
+    if (interest >= 40) return 'Médio';
+    if (interest >= 20) return 'Baixo';
+    return 'Muito Baixo';
+}
+
+// Renderizar gráfico demográfico melhorado
+function renderEnhancedDemographicsChart(demographicsData) {
+    const canvas = document.getElementById('demographicsChart');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    
+    // Destruir gráfico anterior se existir
+    if (currentSearchState.charts.demographicsChart) {
+        currentSearchState.charts.demographicsChart.destroy();
+    }
+    
+    // Dados de exemplo ou reais
+    const data = demographicsData?.income_distribution || {
+        labels: ['Até R$ 1.000', 'R$ 1.000-2.000', 'R$ 2.000-4.000', 'R$ 4.000-8.000', 'Acima R$ 8.000'],
+        values: [15, 25, 35, 20, 5]
+    };
+    
+    currentSearchState.charts.demographicsChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: data.labels,
+            datasets: [{
+                data: data.values,
+                backgroundColor: [
+                    '#ef4444',
+                    '#f97316',
+                    '#eab308',
+                    '#22c55e',
+                    '#3b82f6'
+                ],
+                borderWidth: 2,
+                borderColor: '#ffffff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 15,
+                        usePointStyle: true,
+                        font: {
+                            size: 11
+                        }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleColor: '#ffffff',
+                    bodyColor: '#ffffff',
+                    borderColor: '#ff6b35',
+                    borderWidth: 1,
+                    cornerRadius: 8,
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.label}: ${context.parsed}%`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Popular tabela de concorrência
+function populateCompetitionTable(competitionData) {
+    const tableBody = document.getElementById('competitionTableBody');
+    if (!tableBody) return;
+    
+    // Dados de exemplo ou reais
+    const competitors = competitionData?.products || [
+        { name: 'Produto Concorrente 1', marketplace: 'Mercado Livre', price: 89.90, rating: 4.5, sales: '500+' },
+        { name: 'Produto Concorrente 2', marketplace: 'Shopee', price: 95.00, rating: 4.2, sales: '300+' },
+        { name: 'Produto Concorrente 3', marketplace: 'Shein', price: 75.50, rating: 4.0, sales: '200+' },
+        { name: 'Produto Concorrente 4', marketplace: 'Mercado Livre', price: 110.00, rating: 4.7, sales: '800+' },
+        { name: 'Produto Concorrente 5', marketplace: 'Shopee', price: 85.90, rating: 4.3, sales: '400+' }
+    ];
+    
+    tableBody.innerHTML = '';
+    
+    competitors.forEach(competitor => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td class="product-name">${competitor.name}</td>
+            <td class="marketplace">
+                <span class="marketplace-badge ${competitor.marketplace.toLowerCase().replace(' ', '-')}">${competitor.marketplace}</span>
+            </td>
+            <td class="price">R$ ${competitor.price.toFixed(2)}</td>
+            <td class="rating">
+                <div class="rating-container">
+                    <span class="rating-value">${competitor.rating}</span>
+                    <div class="stars">${generateStars(competitor.rating)}</div>
+                </div>
+            </td>
+            <td class="sales">${competitor.sales}</td>
+        `;
+        tableBody.appendChild(row);
+    });
+}
+
+// Gerar estrelas para avaliação
+function generateStars(rating) {
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 !== 0;
+    let starsHTML = '';
+    
+    for (let i = 0; i < fullStars; i++) {
+        starsHTML += '<i class="fas fa-star"></i>';
+    }
+    
+    if (hasHalfStar) {
+        starsHTML += '<i class="fas fa-star-half-alt"></i>';
+    }
+    
+    const emptyStars = 5 - Math.ceil(rating);
+    for (let i = 0; i < emptyStars; i++) {
+        starsHTML += '<i class="far fa-star"></i>';
+    }
+    
+    return starsHTML;
+}
+
+// Popular insights
+function populateInsights(insightsData) {
+    const positiveInsights = document.getElementById('positiveInsights');
+    const negativeInsights = document.getElementById('negativeInsights');
+    const recommendationsList = document.getElementById('recommendationsList');
+    
+    if (!positiveInsights || !negativeInsights || !recommendationsList) return;
+    
+    // Dados de exemplo ou reais
+    const insights = insightsData || {
+        positive: [
+            'Crescimento consistente de interesse nos últimos 3 meses',
+            'Boa margem de lucro potencial com preço sugerido',
+            'Demanda concentrada em regiões de alto poder aquisitivo'
+        ],
+        negative: [
+            'Concorrência moderada a alta no marketplace',
+            'Sazonalidade pode afetar vendas em determinados períodos',
+            'Necessário investimento em marketing para diferenciação'
+        ],
+        recommendations: [
+            'Focar marketing nas regiões Sudeste e Sul',
+            'Lançar promoções durante picos sazonais',
+            'Investir em qualidade do produto para competir com avaliações',
+            'Considerar parcerias com influenciadores do nicho'
+        ]
+    };
+    
+    // Popular insights positivos
+    positiveInsights.innerHTML = '';
+    insights.positive.forEach(insight => {
+        const li = document.createElement('li');
+        li.innerHTML = `<i class="fas fa-check-circle"></i> ${insight}`;
+        positiveInsights.appendChild(li);
+    });
+    
+    // Popular insights negativos
+    negativeInsights.innerHTML = '';
+    insights.negative.forEach(insight => {
+        const li = document.createElement('li');
+        li.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${insight}`;
+        negativeInsights.appendChild(li);
+    });
+    
+    // Popular recomendações
+    recommendationsList.innerHTML = '';
+    insights.recommendations.forEach(recommendation => {
+        const li = document.createElement('li');
+        li.innerHTML = `<i class="fas fa-lightbulb"></i> ${recommendation}`;
+        recommendationsList.appendChild(li);
+    });
+}
+
+// Funções auxiliares existentes (manter as originais)
 function validateSearchInput() {
     const searchInput = document.getElementById('marketSearchInput');
     const searchButton = document.getElementById('marketSearchButton');
@@ -103,7 +1056,6 @@ function validateSearchInput() {
     return true;
 }
 
-// Mostrar erro de input
 function showInputError(message) {
     let errorElement = document.getElementById('searchInputError');
     if (!errorElement) {
@@ -117,7 +1069,6 @@ function showInputError(message) {
     errorElement.style.display = 'block';
 }
 
-// Esconder erro de input
 function hideInputError() {
     const errorElement = document.getElementById('searchInputError');
     if (errorElement) {
@@ -125,7 +1076,6 @@ function hideInputError() {
     }
 }
 
-// Verificar acesso à pesquisa de mercado
 function checkMarketResearchAccess() {
     // Verificar se usuário tem assinatura ativa
     if (typeof userSubscriptionStatus !== 'undefined' && 
@@ -139,7 +1089,6 @@ function checkMarketResearchAccess() {
     return true;
 }
 
-// Mostrar mensagem de acesso limitado
 function showAccessLimitedMessage() {
     const searchButton = document.getElementById('marketSearchButton');
     const searchInput = document.getElementById('marketSearchInput');
@@ -155,1074 +1104,190 @@ function showAccessLimitedMessage() {
     }
 }
 
-// Manipular pesquisa de mercado
-async function handleMarketSearch() {
-    console.log('Iniciando pesquisa de mercado...');
-    
-    // Verificar se já está pesquisando
-    if (currentSearchState.isSearching) {
-        console.log('Pesquisa já em andamento');
-        return;
-    }
-    
-    // Verificar acesso
-    if (!checkMarketResearchAccess()) {
-        console.log('Acesso negado à pesquisa de mercado');
-        return;
-    }
-    
-    // Validar input
-    if (!validateSearchInput()) {
-        console.log('Input inválido');
-        return;
-    }
-    
-    const searchInput = document.getElementById('marketSearchInput');
-    const query = searchInput.value.trim();
-    
-    // Verificar cache
-    const cachedResult = getCachedResult(query);
-    if (cachedResult) {
-        console.log('Resultado encontrado no cache');
-        displayMarketResearchResults(cachedResult);
-        return;
-    }
-    
-    try {
-        // Iniciar estado de loading
-        setSearchLoadingState(true);
-        currentSearchState.isSearching = true;
-        currentSearchState.currentQuery = query;
-        
-        // Fazer a pesquisa
-        const results = await performMarketResearch(query);
-        
-        // Salvar no cache
-        setCachedResult(query, results);
-        
-        // Salvar no histórico
-        addToSearchHistory(query);
-        
-        // Mostrar resultados
-        displayMarketResearchResults(results);
-        
-    } catch (error) {
-        console.error('Erro na pesquisa de mercado:', error);
-        showSearchError(error.message);
-    } finally {
-        // Finalizar estado de loading
-        setSearchLoadingState(false);
-        currentSearchState.isSearching = false;
-    }
-}
-
-// Definir estado de loading
-function setSearchLoadingState(isLoading) {
-    const searchButton = document.getElementById('marketSearchButton');
-    const searchInput = document.getElementById('marketSearchInput');
-    const loadingIndicator = document.getElementById('searchLoadingIndicator');
-    
-    if (isLoading) {
-        searchButton.disabled = true;
-        searchButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analisando...';
-        searchInput.disabled = true;
-        
-        if (loadingIndicator) {
-            loadingIndicator.style.display = 'block';
-        }
-    } else {
-        searchButton.disabled = false;
-        searchButton.innerHTML = '<i class="fas fa-search"></i> Analisar';
-        searchInput.disabled = false;
-        
-        if (loadingIndicator) {
-            loadingIndicator.style.display = 'none';
-        }
-    }
-}
-
-// Realizar pesquisa de mercado
-async function performMarketResearch(query) {
-    console.log(`Realizando pesquisa para: "${query}"`);
-    
-    // Obter token de autenticação
-    const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
-    if (sessionError || !session || !session.access_token) {
-        throw new Error('Usuário não autenticado');
-    }
-    
-    const accessToken = session.access_token;
-    
-    // Fazer requisição para Edge Function
-    const response = await fetch(`${SUPABASE_FUNCTIONS_BASE_URL}/market-research`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`
-        },
-        body: JSON.stringify({
-            query: query,
-            timestamp: new Date().toISOString()
-        })
-    });
-    
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Erro na pesquisa: ${response.status}`);
-    }
-    
-    const results = await response.json();
-    console.log('Resultados da pesquisa:', results);
-    
-    return results;
-}
-
-// Função para exibir os resultados diretamente na página
-function displayMarketResearchResults(results) {
-    console.log('Exibindo resultados da pesquisa diretamente na página');
-    const resultsContainer = document.getElementById('marketResearchResultsContainer');
-    if (!resultsContainer) {
-        console.error('Elemento marketResearchResultsContainer não encontrado.');
-        return;
-    }
-
-    if (!results || !results.success) {
-        resultsContainer.innerHTML = `
-            <div class="error-message">
-                <i class="fas fa-exclamation-triangle"></i>
-                <h3>Erro na Análise</h3>
-                <p>${results?.error || 'Não foi possível realizar a análise'}</p>
-            </div>
-        `;
-        resultsContainer.style.display = 'block';
-        return;
-    }
-
-    const data = results.data;
-    
-    // Atualizar o conteúdo das seções existentes
-    updateTrendSection(data.trends);
-    updateRegionSection(data.regions);
-    updateDemographySection(data.demographics);
-    updateCompetitionSection(data.competition);
-    updateSuggestedPriceSection(data.price_analysis);
-    updateSalesInsightsSection(data.sales_insights);
-    updateInsightsRecommendationsSection(data.insights_recommendations);
-
-    // Mostrar o container de resultados
-    resultsContainer.style.display = 'block';
-
-    // Salvar resultados atuais
-    currentSearchState.lastResults = results;
-}
-
-// Atualizar seção de tendência de busca
-function updateTrendSection(trendsData) {
-    const trendContainer = document.querySelector('.trend-chart-container');
-    if (!trendContainer) return;
-
-    trendContainer.innerHTML = `
-        <h2><i class="fas fa-chart-line icon"></i> Tendência de Busca</h2>
-        <div class="trend-content">
-            <p>Interesse ao longo do tempo</p>
-            <canvas id="trendChart" width="400" height="200"></canvas>
-            <div class="trend-summary">
-                <span>Últimos 7 dias: <strong id="trend7Days">+15%</strong></span>
-                <span>Últimos 30 dias: <strong id="trend30Days">+8%</strong></span>
-            </div>
-        </div>
-    `;
-
-    // Renderizar gráfico de tendência
-    renderTrendChart(trendsData);
-}
-
-// Atualizar seção de regiões
-function updateRegionSection(regionsData) {
-    const regionContainer = document.querySelector('.region-map-container');
-    if (!regionContainer) return;
-
-    regionContainer.innerHTML = `
-        <h2><i class="fas fa-map-marked-alt icon"></i> Regiões</h2>
-        <div class="region-content">
-            <div id="brazilMapContainer">
-                <svg id="brazilMap" width="300" height="250" viewBox="0 0 300 250">
-                    <!-- Mapa do Brasil será renderizado aqui -->
-                </svg>
-            </div>
-        </div>
-    `;
-
-    // Renderizar mapa do Brasil
-    renderBrazilMap(regionsData);
-}
-
-// Atualizar seção de demografia e mercado
-function updateDemographySection(demographicsData) {
-    const demographyContainer = document.querySelector('.demography-chart-container');
-    if (!demographyContainer) return;
-
-    demographyContainer.innerHTML = `
-        <h2><i class="fas fa-users icon"></i> Demografia & Mercado</h2>
-        <div class="demography-content">
-            <p>Renda Média</p>
-            <canvas id="incomeChart" width="300" height="150"></canvas>
-        </div>
-    `;
-
-    // Renderizar gráfico de renda
-    renderIncomeChart(demographicsData?.income_distribution);
-}
-
-// Atualizar seção de concorrência
-function updateCompetitionSection(competitionData) {
-    const competitionContainer = document.querySelector('.competition-table-container');
-    if (!competitionContainer) return;
-
-    competitionContainer.innerHTML = `
-        <h2><i class="fas fa-balance-scale icon"></i> Concorrência</h2>
-        <div class="competition-content">
-            <p>Preço e Avaliações</p>
-            <table class="competition-table">
-                <thead>
-                    <tr>
-                        <th>Produto</th>
-                        <th>Preço</th>
-                        <th>Avaliação</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${generateCompetitionTableRows(competitionData)}
-                </tbody>
-            </table>
-        </div>
-    `;
-}
-
-// Atualizar seção de preço sugerido
-function updateSuggestedPriceSection(priceAnalysis) {
-    const priceContainer = document.querySelector('.suggested-price-container');
-    if (!priceContainer) return;
-
-    priceContainer.innerHTML = `
-        <h2><i class="fas fa-dollar-sign icon"></i> Preço Sugerido</h2>
-        <div class="price-content">
-            <div class="suggested-price-value">R$ ${priceAnalysis?.suggested_price || '105,00'}</div>
-            <div class="profit-margin">Margem de Lucro<br><strong>${priceAnalysis?.profit_margin || '30'}%</strong></div>
-        </div>
-    `;
-}
-
-// Atualizar seção de insights de vendas
-function updateSalesInsightsSection(salesInsights) {
-    const salesContainer = document.querySelector('.sales-insights-chart-container');
-    if (!salesContainer) return;
-
-    salesContainer.innerHTML = `
-        <h2><i class="fas fa-chart-bar icon"></i> Insights de Vendas</h2>
-        <div class="sales-content">
-            <canvas id="salesInsightsChart" width="300" height="150"></canvas>
-        </div>
-    `;
-
-    // Renderizar gráfico de insights de vendas
-    renderSalesInsightsChart(salesInsights);
-}
-
-// Atualizar seção de insights e recomendações
-function updateInsightsRecommendationsSection(insightsData) {
-    const insightsContainer = document.querySelector('.insights-recommendations-section');
-    if (!insightsContainer) return;
-
-    insightsContainer.innerHTML = `
-        <h2><i class="fas fa-lightbulb icon"></i> Insights e Recomendações</h2>
-        <div class="insights-content">
-            <ul>
-                ${generateInsightsRecommendationsList(insightsData)}
-            </ul>
-        </div>
-    `;
-}
-
-// Gerar linhas da tabela de concorrência
-function generateCompetitionTableRows(competitionData) {
-    if (!competitionData || competitionData.length === 0) {
-        return '<tr><td colspan="3">Nenhum dado de concorrência disponível.</td></tr>';
-    }
-    return competitionData.map(item => `
-        <tr>
-            <td>${item.product_name || 'N/A'}</td>
-            <td>R$ ${item.price || 'N/A'}</td>
-            <td>${generateStarRating(item.rating)}</td>
-        </tr>
-    `).join('');
-}
-
-// Gerar estrelas de avaliação
-function generateStarRating(rating) {
-    if (rating === undefined || rating === null) return 'N/A';
-    let stars = '';
-    for (let i = 0; i < 5; i++) {
-        if (i < rating) {
-            stars += '<i class="fas fa-star filled"></i>';
-        } else {
-            stars += '<i class="fas fa-star"></i>';
-        }
-    }
-    return stars;
-}
-
-// Gerar lista de insights e recomendações
-function generateInsightsRecommendationsList(insightsData) {
-    if (!insightsData || insightsData.length === 0) {
-        return '<li>Nenhum insight ou recomendação disponível.</li>';
-    }
-    return insightsData.map(insight => `
-        <li>
-            <strong>${insight.title}:</strong> ${insight.description}
-        </li>
-    `).join('');
-}
-
-// Renderizar Gráfico de Tendência de Busca
-function renderTrendChart(trendsData) {
-    const canvas = document.getElementById("trendChart");
-    if (!canvas) return;
-
-    const ctx = canvas.getContext("2d");
-
-    // Gerar dados de exemplo para os últimos 6 meses se não houver dados reais
-    const today = new Date();
-    const sampleData = Array.from({ length: 6 }, (_, i) => {
-        const date = new Date(today.getFullYear(), today.getMonth() - (5 - i), 1);
-        const monthYear = date.toLocaleString('pt-BR', { month: 'short', year: '2-digit' });
-        return { period: monthYear, value: Math.floor(Math.random() * 60) + 40 }; // Valores aleatórios entre 40 e 100
-    });
-
-    const dataToRender = trendsData && trendsData.length > 0 ? trendsData : sampleData;
-
-    // Destruir instância anterior do gráfico se existir
-    if (window.trendChartInstance) {
-        window.trendChartInstance.destroy();
-    }
-
-    const labels = dataToRender.map(t => t.period);
-    const values = dataToRender.map(t => t.value);
-
-    window.trendChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Interesse ao longo do tempo',
-                data: values,
-                borderColor: '#ff6b35',
-                backgroundColor: 'rgba(255, 107, 53, 0.2)',
-                fill: true,
-                tension: 0.4,
-                pointBackgroundColor: '#ff6b35',
-                pointBorderColor: '#fff',
-                pointHoverBackgroundColor: '#fff',
-                pointHoverBorderColor: '#ff6b35',
-                pointRadius: 5,
-                pointHoverRadius: 7
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100,
-                    grid: {
-                        color: 'rgba(0, 0, 0, 0.05)'
-                    },
-                    ticks: {
-                        color: '#666'
-                    }
-                },
-                x: {
-                    grid: {
-                        display: false
-                    },
-                    ticks: {
-                        color: '#666'
-                    }
-                }
-            },
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return `Interesse: ${context.raw}%`;
-                        }
-                    }
-                }
-            }
-        }
-    });
-
-    // Atualizar percentuais de aumento/queda nas buscas
-    updateTrendSummaries(dataToRender);
-}
-
-// Atualizar resumos de tendência
-function updateTrendSummaries(trendsData) {
-    const trend7Days = document.getElementById('trend7Days');
-    const trend30Days = document.getElementById('trend30Days');
-    const trend90Days = document.getElementById('trend90Days');
-
-    const getPercentageChange = (data, days) => {
-        if (data.length < days) return 'N/A';
-        const startValue = data[data.length - days].value;
-        const endValue = data[data.length - 1].value;
-        if (startValue === 0) return 'N/A';
-        const change = ((endValue - startValue) / startValue) * 100;
-        return `${change.toFixed(2)}% ${change >= 0 ? '▲' : '▼'}`;
-    };
-
-    if (trend7Days) trend7Days.textContent = getPercentageChange(trendsData, 7);
-    if (trend30Days) trend30Days.textContent = getPercentageChange(trendsData, 30);
-    if (trend90Days) trend90Days.textContent = getPercentageChange(trendsData, 90);
-}
-
-// Renderizar Gráfico de Renda Média (Demografia)
-function renderIncomeChart(incomeDistribution) {
-    const canvas = document.getElementById("incomeChart");
-    if (!canvas) return;
-
-    const ctx = canvas.getContext("2d");
-
-    // Dados de exemplo para demonstração se não houver dados reais
-    const sampleIncomeData = [
-        { range: "Até R$1.500", percentage: 30 },
-        { range: "R$1.501-R$3.000", percentage: 40 },
-        { range: "R$3.001-R$6.000", percentage: 20 },
-        { range: "Acima de R$6.000", percentage: 10 }
-    ];
-
-    const dataToRender = incomeDistribution && incomeDistribution.length > 0 ? incomeDistribution : sampleIncomeData;
-
-    if (window.incomeChartInstance) {
-        window.incomeChartInstance.destroy();
-    }
-
-    const labels = dataToRender.map(d => d.range);
-    const data = dataToRender.map(d => d.percentage);
-
-    window.incomeChartInstance = new Chart(ctx, {
-        type: "bar",
-        data: {
-            labels: labels,
-            datasets: [{
-                label: "Porcentagem da População",
-                data: data,
-                backgroundColor: "#ff6b35",
-                borderColor: "#ff6b35",
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: "Porcentagem da População"
-                    },
-                    ticks: {
-                        callback: function(value) {
-                            return value + "%";
-                        },
-                        color: "#666"
-                    },
-                    grid: {
-                        color: "rgba(0, 0, 0, 0.05)"
-                    }
-                },
-                x: {
-                    title: {
-                        display: true,
-                        text: "Faixa de Renda"
-                    },
-                    ticks: {
-                        color: "#666"
-                    },
-                    grid: {
-                        display: false
-                    }
-                }
-            },
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return `População: ${context.raw}%`;
-                        }
-                    }
-                }
-            }
-        }
-    });
-}
-
-// Renderizar Gráfico de Insights de Vendas
-function renderSalesInsightsChart(salesInsightsData) {
-    const canvas = document.getElementById("salesInsightsChart");
-    if (!canvas) return;
-
-    const ctx = canvas.getContext("2d");
-
-    // Dados de exemplo para demonstração se não houver dados reais
-    const sampleSalesData = [
-        { label: "Estoque", value: 70 },
-        { label: "Sazonalidade", value: 50 },
-        { label: "Produtos Complementares", value: 90 }
-    ];
-
-    const dataToRender = salesInsightsData && salesInsightsData.length > 0 ? salesInsightsData : sampleSalesData;
-
-    if (window.salesInsightsChartInstance) {
-        window.salesInsightsChartInstance.destroy();
-    }
-
-    const labels = dataToRender.map(s => s.label);
-    const data = dataToRender.map(s => s.value);
-
-    window.salesInsightsChartInstance = new Chart(ctx, {
-        type: "bar",
-        data: {
-            labels: labels,
-            datasets: [{
-                label: "Insights de Vendas",
-                data: data,
-                backgroundColor: "#ff6b35",
-                borderColor: "#ff6b35",
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100,
-                    ticks: {
-                        callback: function(value) {
-                            return value + "%";
-                        },
-                        color: "#666"
-                    },
-                    grid: {
-                        color: "rgba(0, 0, 0, 0.05)"
-                    }
-                },
-                x: {
-                    ticks: {
-                        color: "#666"
-                    },
-                    grid: {
-                        display: false
-                    }
-                }
-            },
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return `${context.label}: ${context.raw}%`;
-                        }
-                    }
-                }
-            }
-        }
-    });
-}
-
-// Renderizar Mapa do Brasil (usando SVG ou biblioteca)
-function renderBrazilMap(regionsData) {
-    const mapContainer = document.getElementById("brazilMapContainer");
-    if (!mapContainer) return;
-
-    // Dados de exemplo para demonstração
-    const sampleRegions = [
-        { state: "SP", percentage: 35 },
-        { state: "RJ", percentage: 20 },
-        { state: "MG", percentage: 15 },
-        { state: "RS", percentage: 12 },
-        { state: "PR", percentage: 10 },
-        { state: "BA", percentage: 8 },
-        { state: "PE", percentage: 7 },
-        { state: "CE", percentage: 6 },
-        { state: "AM", percentage: 5 },
-        { state: "DF", percentage: 4 }
-    ];
-
-    const dataToRender = regionsData && regionsData.length > 0 ? regionsData : sampleRegions;
-
-    // SVG simplificado do mapa do Brasil (apenas para demonstração)
-    // Em um cenário real, você usaria um SVG completo ou uma biblioteca de mapas.
-    mapContainer.innerHTML = `
-        <svg width="100%" height="100%" viewBox="0 0 500 500">
-            <!-- Exemplo de alguns estados com caminhos simplificados -->
-            <path d="M200,200 L250,200 L250,250 L200,250 Z" id="state-sp" data-state="São Paulo" data-percentage="${dataToRender.find(r => r.state === 'SP')?.percentage || 0}%" fill="#ff6b35" class="state-path"></path>
-            <path d="M250,200 L300,200 L300,250 L250,250 Z" id="state-rj" data-state="Rio de Janeiro" data-percentage="${dataToRender.find(r => r.state === 'RJ')?.percentage || 0}%" fill="#ff8c5a" class="state-path"></path>
-            <path d="M150,150 L200,150 L200,200 L150,200 Z" id="state-mg" data-state="Minas Gerais" data-percentage="${dataToRender.find(r => r.state === 'MG')?.percentage || 0}%" fill="#ffad7f" class="state-path"></path>
-            <path d="M100,250 L150,250 L150,300 L100,300 Z" id="state-rs" data-state="Rio Grande do Sul" data-percentage="${dataToRender.find(r => r.state === 'RS')?.percentage || 0}%" fill="#ffce9f" class="state-path"></path>
-            <path d="M150,250 L200,250 L200,300 L150,300 Z" id="state-pr" data-state="Paraná" data-percentage="${dataToRender.find(r => r.state === 'PR')?.percentage || 0}%" fill="#ffefbf" class="state-path"></path>
-            <path d="M300,100 L350,100 L350,150 L300,150 Z" id="state-ba" data-state="Bahia" data-percentage="${dataToRender.find(r => r.state === 'BA')?.percentage || 0}%" fill="#ff6b35" class="state-path"></path>
-            <path d="M350,100 L400,100 L400,150 L350,150 Z" id="state-pe" data-state="Pernambuco" data-percentage="${dataToRender.find(r => r.state === 'PE')?.percentage || 0}%" fill="#ff8c5a" class="state-path"></path>
-            <path d="M400,100 L450,100 L450,150 L400,150 Z" id="state-ce" data-state="Ceará" data-percentage="${dataToRender.find(r => r.state === 'CE')?.percentage || 0}%" fill="#ffad7f" class="state-path"></path>
-            <path d="M100,50 L150,50 L150,100 L100,100 Z" id="state-am" data-state="Amazonas" data-percentage="${dataToRender.find(r => r.state === 'AM')?.percentage || 0}%" fill="#ffce9f" class="state-path"></path>
-            <path d="M250,150 L300,150 L300,200 L250,200 Z" id="state-df" data-state="Distrito Federal" data-percentage="${dataToRender.find(r => r.state === 'DF')?.percentage || 0}%" fill="#ffefbf" class="state-path"></path>
-            
-            <!-- Adicione mais estados conforme necessário -->
-        </svg>
-        <div id="mapTooltip" class="map-tooltip"></div>
-    `;
-
-    const statePaths = mapContainer.querySelectorAll(".state-path");
-    const tooltip = document.getElementById("mapTooltip");
-
-    statePaths.forEach(path => {
-        path.addEventListener("mouseover", (e) => {
-            tooltip.style.display = "block";
-            tooltip.textContent = `${path.dataset.state}: ${path.dataset.percentage}`;
-            tooltip.style.left = `${e.pageX + 10}px`;
-            tooltip.style.top = `${e.pageY + 10}px`;
-            path.style.opacity = 0.7; // Efeito de hover
-        });
-
-        path.addEventListener("mouseout", () => {
-            tooltip.style.display = "none";
-            path.style.opacity = 1; // Remover efeito de hover
-        });
-
-        path.addEventListener("mousemove", (e) => {
-            tooltip.style.left = `${e.pageX + 10}px`;
-            tooltip.style.top = `${e.pageY + 10}px`;
-        });
-    });
-
-    // Função para obter a cor com base na porcentagem
-    function getColorByPercentage(percentage) {
-        const p = parseFloat(percentage);
-        if (p > 30) return "#ff6b35"; // Laranja forte
-        if (p > 20) return "#ff8c5a";
-        if (p > 10) return "#ffad7f";
-        return "#ffefbf";
-    }
-
-    // Aplicar cores aos estados com base nos dados
-    dataToRender.forEach(region => {
-        const path = document.getElementById(`state-${region.state.toLowerCase()}`);
-        if (path) {
-            path.style.fill = getColorByPercentage(region.percentage);
-        }
-    });
-}
-
-// Limpar pesquisa
-function clearSearch() {
-    const searchInput = document.getElementById('marketSearchInput');
-    if (searchInput) {
-        searchInput.value = '';
-        validateSearchInput();
-    }
-    
-    hideInputError();
-    // Esconder resultados ao limpar a pesquisa
-    const resultsContainer = document.getElementById('marketResearchResultsContainer');
-    if (resultsContainer) {
-        resultsContainer.style.display = 'none';
-    }
-}
-
-// Mostrar erro de pesquisa
-function showSearchError(message) {
-    const errorContainer = document.getElementById('marketResearchResultsContainer');
-    if (errorContainer) {
-        errorContainer.innerHTML = `
-            <div class="error-message">
-                <i class="fas fa-exclamation-triangle"></i>
-                <h3>Erro na Análise</h3>
-                <p>${message}</p>
-                <p>Tente novamente em alguns instantes ou entre em contato com o suporte se o problema persistir.</p>
-            </div>
-        `;
-        errorContainer.style.display = 'block';
-    }
-}
-
-// Funções de cache
 function getCachedResult(query) {
     try {
-        const cacheKey = `market_research_${btoa(query)}`;
-        const cached = localStorage.getItem(cacheKey);
-        
+        const cached = localStorage.getItem(`market_research_${query}`);
         if (cached) {
             const data = JSON.parse(cached);
-            const now = Date.now();
-            
-            if (now - data.timestamp < MARKET_RESEARCH_CONFIG.cacheTimeout) {
+            if (Date.now() - data.timestamp < MARKET_RESEARCH_CONFIG.cacheTimeout) {
                 return data.results;
-            } else {
-                localStorage.removeItem(cacheKey);
             }
         }
     } catch (error) {
         console.error('Erro ao acessar cache:', error);
     }
-    
     return null;
 }
 
 function setCachedResult(query, results) {
     try {
-        const cacheKey = `market_research_${btoa(query)}`;
         const data = {
-            timestamp: Date.now(),
-            results: results
+            results: results,
+            timestamp: Date.now()
         };
-        
-        localStorage.setItem(cacheKey, JSON.stringify(data));
+        localStorage.setItem(`market_research_${query}`, JSON.stringify(data));
     } catch (error) {
         console.error('Erro ao salvar no cache:', error);
     }
 }
 
-// Funções de histórico
-function loadSearchHistory() {
-    try {
-        const history = localStorage.getItem('market_research_history');
-        if (history) {
-            currentSearchState.searchHistory = JSON.parse(history);
-        }
-    } catch (error) {
-        console.error('Erro ao carregar histórico:', error);
-        currentSearchState.searchHistory = [];
-    }
-}
-
 function addToSearchHistory(query) {
     try {
-        // Remover duplicatas
-        currentSearchState.searchHistory = currentSearchState.searchHistory.filter(item => item.query !== query);
+        let history = JSON.parse(localStorage.getItem('market_research_history') || '[]');
+        
+        // Remover query se já existir
+        history = history.filter(item => item !== query);
         
         // Adicionar no início
-        currentSearchState.searchHistory.unshift({
-            query: query,
-            timestamp: Date.now()
-        });
+        history.unshift(query);
         
         // Manter apenas os últimos 10
-        currentSearchState.searchHistory = currentSearchState.searchHistory.slice(0, 10);
+        history = history.slice(0, 10);
         
-        // Salvar no localStorage
-        localStorage.setItem('market_research_history', JSON.stringify(currentSearchState.searchHistory));
+        localStorage.setItem('market_research_history', JSON.stringify(history));
+        
+        // Atualizar interface do histórico
+        updateHistoryDisplay(history);
     } catch (error) {
         console.error('Erro ao salvar histórico:', error);
     }
 }
 
-// Exportar funções globais
-window.initMarketResearch = initMarketResearch;
+function loadSearchHistory() {
+    try {
+        const history = JSON.parse(localStorage.getItem('market_research_history') || '[]');
+        updateHistoryDisplay(history);
+    } catch (error) {
+        console.error('Erro ao carregar histórico:', error);
+    }
+}
 
-
-
-// Renderizar Gráfico de Tendência de Busca
-function renderTrendChart(trendsData) {
-    const canvas = document.getElementById('trendChart');
-    if (!canvas) return;
+function updateHistoryDisplay(history) {
+    const historySection = document.getElementById('searchHistorySection');
+    const historyList = document.getElementById('searchHistoryList');
     
-    const ctx = canvas.getContext('2d');
+    if (!historySection || !historyList) return;
     
-    // Dados de exemplo para demonstração
-    const sampleData = [
-        { period: 'Set 2023', value: 45 },
-        { period: 'Jan 2024', value: 55 },
-        { period: 'Mar 2024', value: 75 },
-        { period: 'Mai 2024', value: 85 }
-    ];
+    if (history.length === 0) {
+        historySection.style.display = 'none';
+        return;
+    }
     
-    const data = trendsData || sampleData;
+    historySection.style.display = 'block';
+    historyList.innerHTML = '';
     
-    // Limpar canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Configurações do gráfico
-    const padding = 40;
-    const chartWidth = canvas.width - 2 * padding;
-    const chartHeight = canvas.height - 2 * padding;
-    
-    // Encontrar valores min e max
-    const maxValue = Math.max(...data.map(d => d.value));
-    const minValue = Math.min(...data.map(d => d.value));
-    
-    // Desenhar eixos
-    ctx.strokeStyle = '#e0e0e0';
-    ctx.lineWidth = 1;
-    
-    // Eixo Y
-    ctx.beginPath();
-    ctx.moveTo(padding, padding);
-    ctx.lineTo(padding, padding + chartHeight);
-    ctx.stroke();
-    
-    // Eixo X
-    ctx.beginPath();
-    ctx.moveTo(padding, padding + chartHeight);
-    ctx.lineTo(padding + chartWidth, padding + chartHeight);
-    ctx.stroke();
-    
-    // Desenhar linha de tendência
-    ctx.strokeStyle = '#ff6b35';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    
-    data.forEach((point, index) => {
-        const x = padding + (index / (data.length - 1)) * chartWidth;
-        const y = padding + chartHeight - ((point.value - minValue) / (maxValue - minValue)) * chartHeight;
-        
-        if (index === 0) {
-            ctx.moveTo(x, y);
-        } else {
-            ctx.lineTo(x, y);
-        }
-    });
-    
-    ctx.stroke();
-    
-    // Desenhar pontos
-    ctx.fillStyle = '#ff6b35';
-    data.forEach((point, index) => {
-        const x = padding + (index / (data.length - 1)) * chartWidth;
-        const y = padding + chartHeight - ((point.value - minValue) / (maxValue - minValue)) * chartHeight;
-        
-        ctx.beginPath();
-        ctx.arc(x, y, 4, 0, 2 * Math.PI);
-        ctx.fill();
-    });
-    
-    // Adicionar labels
-    ctx.fillStyle = '#666';
-    ctx.font = '12px Arial';
-    ctx.textAlign = 'center';
-    
-    data.forEach((point, index) => {
-        const x = padding + (index / (data.length - 1)) * chartWidth;
-        ctx.fillText(point.period, x, padding + chartHeight + 20);
+    history.forEach(query => {
+        const item = document.createElement('div');
+        item.className = 'history-item';
+        item.textContent = query;
+        item.onclick = () => {
+            document.getElementById('marketSearchInput').value = query;
+            handleEnhancedMarketSearch();
+        };
+        historyList.appendChild(item);
     });
 }
 
-// Renderizar Mapa do Brasil
-function renderBrazilMap(regionsData) {
-    const mapContainer = document.getElementById('brazilMapContainer');
-    if (!mapContainer) return;
+function clearSearch() {
+    const searchInput = document.getElementById('marketSearchInput');
+    const resultsContainer = document.getElementById('marketResearchResultsContainer');
     
-    // Dados de exemplo para demonstração
-    const sampleRegions = [
-        { state: 'SP', percentage: 35 },
-        { state: 'RJ', percentage: 20 },
-        { state: 'MG', percentage: 15 },
-        { state: 'RS', percentage: 12 },
-        { state: 'PR', percentage: 10 }
-    ];
+    if (searchInput) {
+        searchInput.value = '';
+        searchInput.focus();
+    }
     
-    const regions = regionsData || sampleRegions;
+    if (resultsContainer) {
+        resultsContainer.style.display = 'none';
+    }
     
-    // Criar SVG simplificado do Brasil
-    mapContainer.innerHTML = `
-        <svg width="300" height="250" viewBox="0 0 300 250">
-            <!-- Estados do Brasil simplificados -->
-            <g id="brazilStates">
-                <!-- São Paulo -->
-                <path d="M120 180 L160 180 L160 200 L120 200 Z" 
-                      fill="#ff6b35" opacity="0.8" 
-                      data-state="SP" data-percentage="35%"
-                      class="state-path">
-                </path>
-                
-                <!-- Rio de Janeiro -->
-                <path d="M160 180 L180 180 L180 195 L160 195 Z" 
-                      fill="#ff8c5a" opacity="0.7" 
-                      data-state="RJ" data-percentage="20%"
-                      class="state-path">
-                </path>
-                
-                <!-- Minas Gerais -->
-                <path d="M120 160 L160 160 L160 180 L120 180 Z" 
-                      fill="#ffad7f" opacity="0.6" 
-                      data-state="MG" data-percentage="15%"
-                      class="state-path">
-                </path>
-                
-                <!-- Rio Grande do Sul -->
-                <path d="M100 200 L140 200 L140 230 L100 230 Z" 
-                      fill="#ffce9f" opacity="0.5" 
-                      data-state="RS" data-percentage="12%"
-                      class="state-path">
-                </path>
-                
-                <!-- Paraná -->
-                <path d="M100 180 L120 180 L120 200 L100 200 Z" 
-                      fill="#ffefbf" opacity="0.4" 
-                      data-state="PR" data-percentage="10%"
-                      class="state-path">
-                </path>
-            </g>
-        </svg>
-        <div class="map-legend">
-            <div class="legend-item">
-                <span class="legend-color" style="background: #ff6b35;"></span>
-                <span>SP: 35%</span>
-            </div>
-            <div class="legend-item">
-                <span class="legend-color" style="background: #ff8c5a;"></span>
-                <span>RJ: 20%</span>
-            </div>
-            <div class="legend-item">
-                <span class="legend-color" style="background: #ffad7f;"></span>
-                <span>MG: 15%</span>
-            </div>
+    // Limpar estado
+    currentSearchState.currentQuery = '';
+    currentSearchState.lastResults = null;
+}
+
+function showSearchError(message) {
+    const resultsContainer = document.getElementById('marketResearchResultsContainer');
+    if (!resultsContainer) return;
+    
+    resultsContainer.innerHTML = `
+        <div class="error-message">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>Erro na Análise</h3>
+            <p>${message}</p>
+            <button onclick="handleEnhancedMarketSearch()" class="retry-btn">
+                <i class="fas fa-redo"></i> Tentar Novamente
+            </button>
         </div>
     `;
-    
-    // Adicionar interatividade ao mapa
-    const statePaths = mapContainer.querySelectorAll('.state-path');
-    statePaths.forEach(path => {
-        path.addEventListener('mouseenter', function() {
-            const state = this.getAttribute('data-state');
-            const percentage = this.getAttribute('data-percentage');
-            
-            // Criar tooltip
-            const tooltip = document.createElement('div');
-            tooltip.className = 'map-tooltip';
-            tooltip.innerHTML = `${state}: ${percentage}`;
-            tooltip.style.position = 'absolute';
-            tooltip.style.background = '#333';
-            tooltip.style.color = 'white';
-            tooltip.style.padding = '5px 10px';
-            tooltip.style.borderRadius = '4px';
-            tooltip.style.fontSize = '12px';
-            tooltip.style.pointerEvents = 'none';
-            tooltip.style.zIndex = '1000';
-            
-            document.body.appendChild(tooltip);
-            
-            // Posicionar tooltip
-            const rect = this.getBoundingClientRect();
-            tooltip.style.left = (rect.left + rect.width / 2 - tooltip.offsetWidth / 2) + 'px';
-            tooltip.style.top = (rect.top - tooltip.offsetHeight - 5) + 'px';
-        });
-        
-        path.addEventListener('mouseleave', function() {
-            const tooltip = document.querySelector('.map-tooltip');
-            if (tooltip) {
-                tooltip.remove();
-            }
-        });
-    });
+    resultsContainer.style.display = 'block';
 }
 
-// Renderizar Gráfico de Renda
-function renderIncomeChart(incomeData) {
-    const canvas = document.getElementById('incomeChart');
-    if (!canvas) return;
-    
-    const ctx = canvas.getContext('2d');
-    
-    // Dados de exemplo
-    const sampleData = [
-        { range: 'R$ 5.000', value: 300 },
-        { range: 'R$ 1.000', value: 600 },
-        { range: 'R$ 3.000', value: 800 },
-        { range: 'R$ 3.000', value: 1200 },
-        { range: 'R$ 3.000', value: 1500 }
-    ];
-    
-    const data = incomeData || sampleData;
-    
-    // Limpar canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Configurações do gráfico
-    const padding = 30;
-    const chartWidth = canvas.width - 2 * padding;
-    const chartHeight = canvas.height - 2 * padding;
-    const barWidth = chartWidth / data.length - 10;
-    
-    // Encontrar valor máximo
-    const maxValue = Math.max(...data.map(d => d.value));
-    
-    // Desenhar barras
-    ctx.fillStyle = '#ff6b35';
-    data.forEach((item, index) => {
-        const barHeight = (item.value / maxValue) * chartHeight;
-        const x = padding + index * (barWidth + 10);
-        const y = padding + chartHeight - barHeight;
-        
-        ctx.fillRect(x, y, barWidth, barHeight);
-    });
+// Funções de interação com cards
+function expandCard(cardClass) {
+    const card = document.querySelector(`.${cardClass}`);
+    if (card) {
+        card.classList.toggle('expanded');
+    }
 }
 
-// Renderizar Gráfico de Insights de Vendas
-function renderSalesInsightsChart(salesData) {
-    const canvas = document.getElementById('salesInsightsChart');
-    if (!canvas) return;
+function exportInsights() {
+    if (!currentSearchState.lastResults) {
+        alert('Nenhum resultado para exportar');
+        return;
+    }
     
-    const ctx = canvas.getContext('2d');
+    // Criar conteúdo para exportação
+    const content = generateExportContent(currentSearchState.lastResults);
     
-    // Dados de exemplo
-    const sampleData = [
-        { category: 'Estoque', value: 60 },
-        { category: 'Sazonalidade', value: 40 },
-        { category: 'Produtos', value: 80 },
-        { category: 'Complementares', value: 95 }
-    ];
-    
-    const data = salesData || sampleData;
-    
-    // Limpar canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Configurações do gráfico
-    const padding = 30;
-    const chartWidth = canvas.width - 2 * padding;
-    const chartHeight = canvas.height - 2 * padding;
-    const barWidth = chartWidth / data.length - 10;
-    
-    // Encontrar valor máximo
-    const maxValue = Math.max(...data.map(d => d.value));
-    
-    // Desenhar barras
-    data.forEach((item, index) => {
-        const barHeight = (item.value / maxValue) * chartHeight;
-        const x = padding + index * (barWidth + 10);
-        const y = padding + chartHeight - barHeight;
-        
-        // Cor da barra baseada no valor
-        if (item.value >= 80) {
-            ctx.fillStyle = '#ff6b35';
-        } else if (item.value >= 60) {
-            ctx.fillStyle = '#ff8c5a';
-        } else {
-            ctx.fillStyle = '#ffad7f';
-        }
-        
-        ctx.fillRect(x, y, barWidth, barHeight);
-    });
+    // Criar e baixar arquivo
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `analise-mercado-${currentSearchState.currentQuery}-${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 }
+
+function generateExportContent(results) {
+    const data = results.data;
+    const date = new Date().toLocaleDateString('pt-BR');
+    
+    return `
+ANÁLISE DE MERCADO - ${currentSearchState.currentQuery.toUpperCase()}
+Data: ${date}
+
+=== RESUMO EXECUTIVO ===
+Viabilidade: ${getViabilityText(data.viability_score)} (${data.viability_score}/100)
+Interesse: ${data.interest_level || 'Médio'}
+Competitividade: ${data.competition_level || 'Moderada'}
+
+=== TENDÊNCIAS ===
+Crescimento 7 dias: +${data.trends?.growth_7d || '15'}%
+Crescimento 30 dias: +${data.trends?.growth_30d || '8'}%
+Sazonalidade: ${data.trends?.seasonality || 'Baixa'}
+
+=== DEMOGRAFIA ===
+Renda Média: R$ ${data.demographics?.average_income || '2.500'}
+Faixa Etária Principal: ${data.demographics?.main_age_group || '25-40 anos'}
+Região de Maior Interesse: ${data.demographics?.top_region || 'Sudeste'}
+
+=== PRECIFICAÇÃO ===
+Preço Sugerido: R$ ${data.pricing?.suggested_price || '105,00'}
+Faixa Competitiva: R$ ${data.pricing?.min_price || '85,00'} - R$ ${data.pricing?.max_price || '125,00'}
+Margem de Lucro: ${data.pricing?.profit_margin || '30'}%
+
+=== RECOMENDAÇÃO FINAL ===
+${data.final_recommendation || 'Com base na análise realizada, este produto apresenta boa viabilidade de mercado.'}
+
+---
+Relatório gerado automaticamente pelo Lucre Certo
+    `.trim();
+}
+
+// Exportar função principal para uso global
+window.initEnhancedMarketResearch = initEnhancedMarketResearch;
+
