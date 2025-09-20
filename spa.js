@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'pesquisa':
                 pageContent = getPesquisaContent();
                 setTimeout(() => {
-                    initMarketResearch();
+                    loadReactMarketResearchApp();
                 }, 0);
                 break;
             case 'dre':
@@ -90,6 +90,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (currentRoute === 'dre' && newRoute !== 'dre') {
                 resetDRECalculator();
+            }
+            if (currentRoute === 'pesquisa' && newRoute !== 'pesquisa') {
+                unloadReactMarketResearchApp();
             }
             
             loadPage(newRoute);
@@ -2403,3 +2406,47 @@ function showError(message) {
     }, 5000);
 }
 
+
+
+
+function getPesquisaContent() {
+    return `<div id="react-market-research-root"></div>`;
+}
+
+// Função para carregar e montar o aplicativo React
+function loadReactMarketResearchApp() {
+    const reactRoot = document.getElementById('react-market-research-root');
+    if (!reactRoot) return;
+
+    // Adicionar o script principal do React
+    const script = document.createElement("script");
+    script.src = "/market-research-v2/dist/assets/index.js"; // Ajuste o caminho para onde os arquivos compilados estão
+    script.type = "module";
+    script.id = "react-app-script";
+    document.body.appendChild(script);
+
+    // Adicionar o CSS do React
+    const link = document.createElement("link");
+    link.href = "/market-research-v2/dist/assets/index.css"; // Ajuste o caminho para onde os arquivos compilados estão
+    link.rel = "stylesheet";
+    link.id = "react-app-styles";
+    document.head.appendChild(link);
+}
+
+// Função para desmontar o aplicativo React
+function unloadReactMarketResearchApp() {
+    const reactRoot = document.getElementById("react-market-research-root");
+    if (reactRoot) {
+        reactRoot.innerHTML = "";
+    }
+
+    const script = document.getElementById("react-app-script");
+    if (script) {
+        script.remove();
+    }
+
+    const styles = document.getElementById("react-app-styles");
+    if (styles) {
+        styles.remove();
+    }
+}
